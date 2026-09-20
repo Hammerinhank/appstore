@@ -1,6 +1,6 @@
 {
   "version": "1.3.0",
-  "maj": "2026-09-20T15:24:37.395Z",
+  "maj": "2026-09-20T15:28:29.910Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -76,7 +76,7 @@
         "screens/vins/1-1789909509081.jpg",
         "screens/vins/2-1789909511669.jpg"
       ],
-      "maj": "2026-09-14T17:09:02Z",
+      "maj": "2026-09-20T13:03:44Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -110,7 +110,7 @@
         "#a99bf0"
       ],
       "captures": [],
-      "maj": "2026-09-20T09:57:53Z",
+      "maj": "2026-09-20T12:46:31Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -319,8 +319,8 @@
       "captures": [],
       "maj": "2026-09-17T08:54:16Z",
       "cache": false,
-      "pasAujourdhui": false,
-      "particuliere": false
+      "pasAujourdhui": true,
+      "particuliere": true
     },
     {
       "depot": "boxinternet",
@@ -334,7 +334,7 @@
         "#74d6d6"
       ],
       "captures": [],
-      "maj": "2026-09-20T11:35:34Z",
+      "maj": "2026-09-20T14:35:43Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -489,7 +489,7 @@
         "#b0b0bd"
       ],
       "captures": [],
-      "maj": "2026-09-20T10:21:41Z",
+      "maj": "2026-09-20T15:24:38Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
