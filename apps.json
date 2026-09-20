@@ -1,6 +1,6 @@
 {
   "version": "1.2.0",
-  "maj": "2026-09-20T13:05:14.151Z",
+  "maj": "2026-09-20T13:12:21.381Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -321,7 +321,9 @@
         "#6b3fa0",
         "#c9a6ff"
       ],
-      "captures": [],
+      "captures": [
+        "screens/geminiPhoto/1-1789909939068.jpg"
+      ],
       "maj": "2026-09-12T12:07:38Z"
     },
     {
