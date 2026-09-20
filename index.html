@@ -197,6 +197,34 @@ a{color:var(--bleu);text-decoration:none}
          max-height:260px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 .compteur{margin:0 16px 12px;font-size:15px;font-weight:600;text-align:center;color:var(--bleu)}
 
+/* Bandeau d'état de la sauvegarde */
+.bandeau{margin:0 16px 20px;border-radius:14px;padding:14px 16px;box-shadow:var(--ombre);background:var(--carte)}
+.bandeau .l1{font-size:16px;font-weight:600;display:flex;align-items:center;gap:8px}
+.bandeau .l2{font-size:13.5px;color:var(--texte2);margin-top:4px;line-height:1.4}
+.bandeau.ok .l1{color:#28a745}
+.bandeau.att .l1{color:#e08a00}
+.bandeau.ko .l1{color:#ff3b30}
+@media (prefers-color-scheme: dark){.bandeau.ok .l1{color:#4cd964}.bandeau.att .l1{color:#ffb340}}
+
+/* Phrase d'explication sous un bouton */
+.souslib{margin:-6px 30px 20px;font-size:13px;line-height:1.45;color:var(--texte2)}
+.gros-bouton+.souslib{margin-top:-4px}
+
+/* Pastille sur l'onglet Réglages quand une sauvegarde est en attente */
+.tab{position:relative}
+.tab .point{position:absolute;top:5px;right:calc(50% - 20px);width:9px;height:9px;border-radius:50%;
+            background:#ff9500;display:none}
+.tab .point.on{display:block}
+
+/* Fenêtre de confirmation */
+.q{font-size:15.5px;line-height:1.5;margin:4px 0 20px}
+.actionsmod{display:flex;flex-direction:column;gap:10px}
+.bt-pri{background:var(--bleu);color:#fff;font-weight:600;font-size:17px;padding:13px;border-radius:14px}
+.bt-pri.dan{background:#ff3b30}
+.bt-sec{background:var(--carte);color:var(--bleu);font-weight:500;font-size:17px;padding:13px;
+        border-radius:14px;box-shadow:var(--ombre)}
+.bt-pri:active,.bt-sec:active{opacity:.6}
+
 /* ---------- Fenêtre modale ---------- */
 .modale{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.42);display:none;
         align-items:flex-end;justify-content:center;padding:0}
@@ -258,6 +286,26 @@ a{color:var(--bleu);text-decoration:none}
     <section class="page" id="p-set">
       <div class="grandtitre"><h1>Réglages</h1></div>
 
+      <div class="bandeau ok" id="bandeauEtat">
+        <div class="l1" id="etatL1">Chargement…</div>
+        <div class="l2" id="etatL2"></div>
+      </div>
+
+      <div class="grptitre">Vos captures et vos textes</div>
+      <button class="gros-bouton" id="btnEnvoyer">Envoyer vers GitHub maintenant</button>
+      <div class="souslib">Normalement inutile : l'envoi se fait tout seul après chaque capture ajoutée.
+        Ce bouton sert quand un envoi a échoué, faute de réseau par exemple.</div>
+
+      <button class="gros-bouton sec" id="btnRecevoir">Récupérer la version de GitHub</button>
+      <div class="souslib">Remplace ce qu'il y a sur ce navigateur par ce qui est enregistré dans le dépôt.
+        À utiliser sur un navigateur où vos captures n'apparaissent pas encore.</div>
+
+      <div class="grptitre">Liste des applications</div>
+      <div id="compteurScan" class="compteur" hidden></div>
+      <button class="gros-bouton sec" id="btnScan">Chercher de nouvelles applications</button>
+      <div class="souslib">Parcourt vos dépôts GitHub et ajoute au catalogue celles qui n'y figurent pas encore.
+        Ne modifie ni vos descriptifs ni vos captures.</div>
+
       <div class="grptitre">Accès GitHub</div>
       <div class="grp">
         <div class="champ"><label>Utilisateur</label><input id="cfgUser" placeholder="Hammerinhank"></div>
@@ -265,15 +313,16 @@ a{color:var(--bleu);text-decoration:none}
         <div class="champ"><label>Branche</label><input id="cfgBranche" placeholder="main"></div>
         <div class="champ"><label>Jeton (PAT)</label><input id="cfgToken" type="password" placeholder="ghp_…" autocomplete="off"></div>
       </div>
-      <button class="gros-bouton" id="btnEnrCfg">Enregistrer les réglages</button>
+      <button class="gros-bouton sec" id="btnEnrCfg">Enregistrer ces identifiants</button>
+      <div class="souslib">Ils restent sur ce navigateur et ne sont jamais envoyés dans le dépôt.</div>
       <button class="gros-bouton sec" id="btnJetons">Chercher un jeton sur cet appareil</button>
+      <div class="souslib">Retrouve un jeton GitHub déjà enregistré par vos autres applications, pour éviter de le retaper.</div>
 
-      <div class="grptitre">Catalogue</div>
-      <div id="compteurScan" class="compteur" hidden></div>
-      <button class="gros-bouton" id="btnRafraichir">Rafraîchir depuis GitHub</button>
-      <button class="gros-bouton sec" id="btnPublier">Publier apps.json</button>
-      <button class="gros-bouton sec" id="btnRelire">Recharger apps.json</button>
-      <button class="gros-bouton dan" id="btnReinit">Revenir au catalogue d'origine</button>
+      <div class="grptitre">Remise à zéro</div>
+      <button class="gros-bouton dan" id="btnReinit">Effacer le catalogue de ce navigateur</button>
+      <div class="souslib">Revient à la liste d'origine inscrite dans la page.
+        Le dépôt GitHub et les captures déjà envoyées ne sont pas touchés.</div>
+
       <div class="grptitre">Journal</div>
       <div class="journal" id="journal">Prêt.</div>
     </section>
@@ -292,6 +341,7 @@ a{color:var(--bleu);text-decoration:none}
       <svg viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 015.9 12.1l4.3 4.3a1.1 1.1 0 01-1.6 1.6l-4.3-4.3A7.5 7.5 0 1110.5 3zm0 2.2a5.3 5.3 0 100 10.6 5.3 5.3 0 000-10.6z"/></svg>
       Recherche</button>
     <button class="tab" data-page="p-set">
+      <span class="point" id="pointReglages"></span>
       <svg viewBox="0 0 24 24"><path d="M12 8.4a3.6 3.6 0 100 7.2 3.6 3.6 0 000-7.2zm8.9 3.6c0 .5 0 1-.1 1.4l2 1.6-1.9 3.3-2.4-1a7.8 7.8 0 01-2.4 1.4l-.4 2.6h-3.8l-.4-2.6a7.8 7.8 0 01-2.4-1.4l-2.4 1L2.8 15l2-1.6a8.5 8.5 0 010-2.8l-2-1.6 1.9-3.3 2.4 1A7.8 7.8 0 019.5 5.3l.4-2.6h3.8l.4 2.6c.9.3 1.7.8 2.4 1.4l2.4-1L20.8 9l-2 1.6c.1.4.1.9.1 1.4z"/></svg>
       Réglages</button>
   </nav>
@@ -323,9 +373,10 @@ a{color:var(--bleu);text-decoration:none}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.2.0", d:"20 septembre 2026", c:"Refonte de la sauvegarde. Les captures et les descriptifs sont maintenant envoyés vers GitHub automatiquement, sans étape manuelle à ne pas oublier — c'est ce qui empêchait de les retrouver d'un navigateur à l'autre. Un bandeau en tête des réglages dit en permanence où en est la sauvegarde et depuis quand. Les boutons portent un nom qui dit ce qu'ils font, avec une phrase d'explication dessous, et toute opération qui écrase quelque chose demande confirmation en nommant ce qui sera perdu." },
   { n:"1.1.0", d:"20 septembre 2026", c:"Les captures qui viennent d'être envoyées s'affichent immédiatement depuis l'appareil, sans attendre la publication par GitHub Pages. Un bandeau « Publication en cours » signale celles qui ne sont pas encore servies en ligne, et l'application bascule d'elle-même sur la version en ligne dès qu'elle répond (contrôle toutes les 5 secondes pendant 10 minutes). Une capture publiée mais momentanément indisponible affiche un message au lieu d'une image cassée." },
   { n:"1.0.0", d:"20 septembre 2026", c:"Première version. Catalogue des 27 applications HTML des dépôts publics, présentation façon App Store (Aujourd'hui, Apps, Recherche, Réglages), fiche détaillée par app, carrousel de captures d'écran, rafraîchissement du catalogue depuis l'API GitHub avec décompte de progression, envoi des captures vers le dépôt et publication d'apps.json." }
 ];
@@ -486,6 +537,10 @@ let cfg  = { user:PROPRIO_DEFAUT, depot:"appstore", branche:"main", token:"" };
 let apps = [];
 let appCourante = null;
 
+/* État de la sauvegarde : combien de modifications n'ont pas encore atteint GitHub,
+   et quand ont eu lieu le dernier envoi et la dernière lecture. */
+let etat = { modifs:0, envoi:null, lecture:null, dernierEchec:null };
+
 const $  = (s,r)=>(r||document).querySelector(s);
 const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c =>
@@ -503,6 +558,73 @@ function toast(msg){
 }
 function urlApp(a){ return "https://" + cfg.user.toLowerCase() + ".github.io/" + a.depot + "/"; }
 function degrade(a){ return "linear-gradient(145deg," + a.c[0] + " 0%," + a.c[1] + " 100%)"; }
+
+function quand(iso){
+  if (!iso) return "jamais";
+  const d = new Date(iso), maintenant = new Date();
+  const mins = Math.round((maintenant - d) / 60000);
+  if (mins < 1) return "à l'instant";
+  if (mins < 60) return "il y a " + mins + " min";
+  if (d.toDateString() === maintenant.toDateString())
+    return "aujourd'hui à " + d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  return "le " + d.toLocaleDateString("fr-FR",{day:"numeric",month:"long"})
+       + " à " + d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+}
+
+/* Enregistre le catalogue sur ce navigateur. modif = true quand le contenu
+   a changé et doit donc repartir vers GitHub. */
+function enregistrerLocal(modif){
+  if (modif) etat.modifs++;
+  try{
+    localStorage.setItem(CLE_CACHE, JSON.stringify({
+      version:VERSION, maj:new Date().toISOString(), apps:apps, etat:etat }));
+  }catch(e){ log("⚠️ Mémoire locale saturée : " + e.message); }
+  majBandeau();
+}
+
+function majBandeau(){
+  const b = $("#bandeauEtat"), l1 = $("#etatL1"), l2 = $("#etatL2"), pt = $("#pointReglages");
+  if (!b) return;
+  b.classList.remove("ok","att","ko");
+
+  if (etat.modifs > 0 && etat.dernierEchec){
+    b.classList.add("ko");
+    l1.textContent = "⚠️  Le dernier envoi a échoué";
+    l2.textContent = etat.dernierEchec + " — " + etat.modifs
+                   + " modification(s) ne sont que sur ce navigateur. Réessayez ci-dessous.";
+  }else if (etat.modifs > 0){
+    b.classList.add("att");
+    l1.textContent = "⏳  " + etat.modifs + " modification(s) à envoyer";
+    l2.textContent = "Elles n'existent que sur ce navigateur pour l'instant.";
+  }else if (etat.envoi){
+    b.classList.add("ok");
+    l1.textContent = "✓  Tout est enregistré sur GitHub";
+    l2.textContent = "Dernier envoi " + quand(etat.envoi)
+                   + (etat.lecture ? " · dernière lecture " + quand(etat.lecture) : "");
+  }else{
+    b.classList.add("ok");
+    l1.textContent = "✓  Rien à envoyer";
+    l2.textContent = etat.lecture
+      ? "Catalogue lu depuis GitHub " + quand(etat.lecture) + "."
+      : "Aucune modification faite sur ce navigateur.";
+  }
+  pt.classList.toggle("on", etat.modifs > 0);
+}
+
+/* Fenêtre de confirmation maison : le confirm() natif se fait masquer par le
+   clavier sur iPhone et ne permet pas de nommer ce qui va être perdu. */
+let reponseAttendue = null;
+function demander(titre, texte, libelleOk, dangereux){
+  return new Promise(resoudre => {
+    reponseAttendue = resoudre;
+    modale(titre,
+        '<p class="q">' + esc(texte) + '</p>'
+      + '<div class="actionsmod">'
+      +   '<button class="bt-pri' + (dangereux ? " dan" : "") + '" data-rep="1">' + esc(libelleOk) + '</button>'
+      +   '<button class="bt-sec" data-rep="0">Annuler</button>'
+      + '</div>');
+  });
+}
 
 function htmlIcone(a, classe){
   if (a.icone) return '<div class="icone '+classe+'"><img src="'+esc(a.icone)+'" alt=""></div>';
@@ -533,34 +655,45 @@ function normaliser(liste){
                               captures:[], maj:null }, a));
 }
 
-async function chargerCatalogue(){
-  // 1) apps.json publié dans le dépôt (source de vérité)
+async function chargerCatalogue(silencieux){
+  // Ce que ce navigateur a en mémoire, et dans quel état
+  let local = null;
+  try{ local = JSON.parse(localStorage.getItem(CLE_CACHE) || "null"); }catch(e){}
+  if (local && local.etat) etat = Object.assign(etat, local.etat);
+
+  // Des modifications attendent d'être envoyées : elles sont prioritaires,
+  // sinon la lecture d'apps.json les effacerait sans prévenir.
+  if (local && Array.isArray(local.apps) && local.apps.length && etat.modifs > 0){
+    apps = normaliser(local.apps);
+    log("Catalogue de ce navigateur conservé : " + etat.modifs + " modification(s) pas encore envoyée(s).");
+    majBandeau();
+    return;
+  }
+
+  // Sinon, le dépôt fait foi
   try{
     const r = await fetch("apps.json?t=" + Date.now(), { cache:"no-store" });
     if (r.ok){
       const o = await r.json();
       if (o && Array.isArray(o.apps) && o.apps.length){
         apps = normaliser(o.apps);
-        localStorage.setItem(CLE_CACHE, JSON.stringify(o));
-        log("apps.json chargé (" + apps.length + " applications).");
+        etat.lecture = new Date().toISOString();
+        etat.modifs = 0; etat.dernierEchec = null;
+        enregistrerLocal(false);
+        if (!silencieux) log("Catalogue lu dans apps.json (" + apps.length + " applications).");
         return;
       }
     }
   }catch(e){ /* fichier absent : on continue */ }
 
-  // 2) dernière version lue, gardée en local
-  try{
-    const o = JSON.parse(localStorage.getItem(CLE_CACHE)||"null");
-    if (o && Array.isArray(o.apps) && o.apps.length){
-      apps = normaliser(o.apps);
-      log("Catalogue repris de la mémoire locale.");
-      return;
-    }
-  }catch(e){}
-
-  // 3) catalogue d'origine inscrit dans la page
-  apps = normaliser(CATALOGUE);
-  log("Catalogue d'origine utilisé (apps.json absent du dépôt).");
+  if (local && Array.isArray(local.apps) && local.apps.length){
+    apps = normaliser(local.apps);
+    log("apps.json illisible : catalogue repris de la mémoire de ce navigateur.");
+  }else{
+    apps = normaliser(CATALOGUE);
+    log("Catalogue d'origine utilisé (apps.json absent du dépôt).");
+  }
+  majBandeau();
 }
 
 /* ================================================================
@@ -767,7 +900,10 @@ function modale(titre, html){
   $("#modCorps").innerHTML = html;
   $("#modale").classList.add("ouvert");
 }
-function fermerModale(){ $("#modale").classList.remove("ouvert"); }
+function fermerModale(){
+  $("#modale").classList.remove("ouvert");
+  if (reponseAttendue){ const f = reponseAttendue; reponseAttendue = null; f(false); }
+}
 
 function montrerHistorique(){
   modale("Historique des versions",
@@ -844,10 +980,11 @@ async function rafraichir(){
     apps.forEach(a => { a.absent = !vus[a.depot]; if (a.absent) log("⚠️ Dépôt introuvable : " + a.depot); });
 
     compteur.textContent = "Terminé : " + total + " dépôts examinés, " + ajouts + " ajout(s).";
-    localStorage.setItem(CLE_CACHE, JSON.stringify({ version:VERSION, maj:new Date().toISOString(), apps:apps }));
+    enregistrerLocal(ajouts > 0);
     rendre();
-    toast(ajouts ? ajouts + " nouvelle(s) application(s)" : "Catalogue à jour");
-    log("Rafraîchissement terminé. Pensez à publier apps.json.");
+    if (ajouts > 0) await envoyerCatalogue(true);
+    toast(ajouts ? ajouts + " nouvelle(s) application(s)" : "Aucune nouvelle application");
+    log("Recherche terminée.");
   }catch(e){
     compteur.textContent = "Interrompu.";
     log("❌ " + e.message);
@@ -855,9 +992,14 @@ async function rafraichir(){
   }
 }
 
-/* --- Publier apps.json dans le dépôt --- */
-async function publierCatalogue(){
-  if (!cfg.token){ toast("Renseignez d'abord un jeton"); return; }
+/* --- Envoyer le catalogue (apps.json) dans le dépôt --- */
+async function envoyerCatalogue(auto){
+  if (!cfg.token){
+    etat.dernierEchec = "Aucun jeton renseigné";
+    majBandeau();
+    if (!auto) toast("Renseignez d'abord un jeton");
+    return false;
+  }
   const contenu = { version:VERSION, maj:new Date().toISOString(),
                     apps: apps.map(a => ({ depot:a.depot, nom:a.nom, emoji:a.emoji, cat:a.cat,
                                            st:a.st, d:a.d, c:a.c, captures:a.captures||[], maj:a.maj||null })) };
@@ -865,9 +1007,33 @@ async function publierCatalogue(){
     await ecrireFichier("apps.json",
       b64(JSON.stringify(contenu, null, 2)),
       "Catalogue : " + apps.length + " applications");
-    log("apps.json publié (" + apps.length + " applications).");
-    toast("apps.json publié");
-  }catch(e){ log("❌ " + e.message); toast("Échec : " + e.message); }
+    etat.modifs = 0; etat.dernierEchec = null; etat.envoi = new Date().toISOString();
+    enregistrerLocal(false);
+    log("✅ Catalogue envoyé (" + apps.length + " applications).");
+    toast("Enregistré sur GitHub");
+    return true;
+  }catch(e){
+    etat.dernierEchec = e.message;
+    majBandeau();
+    log("❌ Envoi du catalogue : " + e.message);
+    toast("Envoi impossible : " + e.message);
+    return false;
+  }
+}
+
+/* --- Reprendre la version du dépôt, en écrasant celle de ce navigateur --- */
+async function recupererCatalogue(){
+  if (etat.modifs > 0){
+    const ok = await demander("Récupérer la version de GitHub",
+      etat.modifs + " modification(s) faite(s) sur ce navigateur n'ont pas encore été envoyées. "
+      + "Si vous continuez, elles seront remplacées par le contenu du dépôt et perdues.",
+      "Récupérer quand même", true);
+    if (!ok) return;
+  }
+  etat.modifs = 0;
+  await chargerCatalogue();
+  rendre();
+  toast("Version de GitHub récupérée");
 }
 
 async function ecrireFichier(chemin, contenuB64, message){
@@ -917,10 +1083,10 @@ async function envoyerCaptures(fichiers){
       log("📸 " + chemin);
     }catch(e){ log("❌ capture " + n + " : " + e.message); toast("Échec : " + e.message); }
   }
-  localStorage.setItem(CLE_CACHE, JSON.stringify({ version:VERSION, maj:new Date().toISOString(), apps:apps }));
+  enregistrerLocal(true);
   ouvrirFiche(a.depot);
-  toast(total + " capture(s) envoyée(s) — publiez apps.json");
   log("Captures envoyées. Mise en ligne par GitHub Pages en cours (20 à 60 s en général).");
+  await envoyerCatalogue(true);   // enregistrement automatique : plus rien à penser
 }
 
 function compresser(fichier, largeurMax, qualite){
@@ -948,18 +1114,22 @@ async function supprimerCapture(i){
   const a = appCourante; if (!a) return;
   const chemin = a.captures[i];
   if (!chemin) return;
-  if (!confirm("Supprimer cette capture ?")) return;
+  const ok = await demander("Supprimer cette capture",
+    "La capture sera retirée de la fiche « " + a.nom + " » et effacée du dépôt GitHub. "
+    + "Cette suppression est définitive.", "Supprimer", true);
+  if (!ok) return;
   try{
     const inf = await gh("/repos/"+cfg.user+"/"+cfg.depot+"/contents/"+chemin+"?ref="+cfg.branche);
     await gh("/repos/"+cfg.user+"/"+cfg.depot+"/contents/"+chemin, {
       method:"DELETE",
       body: JSON.stringify({ message:"Retrait d'une capture", sha:inf.sha, branch:cfg.branche })
     });
-  }catch(e){ log("⚠️ suppression distante : " + e.message); }
+  }catch(e){ log("⚠️ suppression dans le dépôt : " + e.message); }
   a.captures.splice(i,1);
-  localStorage.setItem(CLE_CACHE, JSON.stringify({ version:VERSION, maj:new Date().toISOString(), apps:apps }));
+  delete apercusLocaux[chemin];
+  enregistrerLocal(true);
   ouvrirFiche(a.depot);
-  toast("Capture retirée — publiez apps.json");
+  await envoyerCatalogue(true);
 }
 
 /* ================================================================
@@ -1023,6 +1193,14 @@ document.addEventListener("click", ev => {
   if (sup){ supprimerCapture(parseInt(sup.dataset.sup,10)); return; }
 
   if (t.closest("#btnVersion")){ montrerHistorique(); return; }
+
+  const rep = t.closest("[data-rep]");
+  if (rep){
+    const f = reponseAttendue; reponseAttendue = null;
+    fermerModale();
+    if (f) f(rep.dataset.rep === "1");
+    return;
+  }
   if (t.closest("#modFermer") || t === $("#modale")){ fermerModale(); return; }
 
   const jet = t.closest("[data-jeton]");
@@ -1034,14 +1212,22 @@ document.addEventListener("click", ev => {
 
   if (t.closest("#btnEnrCfg")){ enregistrerCfg(); return; }
   if (t.closest("#btnJetons")){ chercherJetons(); return; }
-  if (t.closest("#btnRafraichir")){ rafraichir(); return; }
-  if (t.closest("#btnPublier")){ publierCatalogue(); return; }
-  if (t.closest("#btnRelire")){ chargerCatalogue().then(rendre).then(()=>toast("Catalogue rechargé")); return; }
+  if (t.closest("#btnScan")){ rafraichir(); return; }
+  if (t.closest("#btnEnvoyer")){ envoyerCatalogue(false); return; }
+  if (t.closest("#btnRecevoir")){ recupererCatalogue(); return; }
   if (t.closest("#btnReinit")){
-    if (confirm("Revenir au catalogue inscrit dans la page ? Les captures déjà envoyées resteront dans le dépôt.")){
-      localStorage.removeItem(CLE_CACHE);
-      apps = normaliser(CATALOGUE); rendre(); toast("Catalogue d'origine rétabli");
-    }
+    demander("Effacer le catalogue de ce navigateur",
+      "La liste d'origine inscrite dans la page sera rétablie ici. "
+      + (etat.modifs > 0 ? etat.modifs + " modification(s) pas encore envoyée(s) seront perdues. " : "")
+      + "Le fichier apps.json et les captures déjà envoyées restent intacts dans le dépôt : "
+      + "« Récupérer la version de GitHub » permet de tout retrouver.",
+      "Effacer", true).then(ok => {
+        if (!ok) return;
+        localStorage.removeItem(CLE_CACHE);
+        etat = { modifs:0, envoi:null, lecture:null, dernierEchec:null };
+        apps = normaliser(CATALOGUE); rendre(); majBandeau();
+        toast("Catalogue d'origine rétabli");
+      });
     return;
   }
 });
@@ -1067,6 +1253,7 @@ document.addEventListener("keydown", e => {
   chargerCfg();
   await chargerCatalogue();
   rendre();
+  majBandeau();
 })();
 </script>
 </body>
