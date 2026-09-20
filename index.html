@@ -83,16 +83,18 @@ a{color:var(--bleu);text-decoration:none}
           padding:5px 12px;border-radius:100px;white-space:nowrap;margin-bottom:5px}
 
 /* ---------- Icône d'app ---------- */
+/* La taille de police de .icone vaut le côté de la pastille : l'emoji, exprimé
+   en em, se met donc à l'échelle tout seul dans chaque contexte. */
 .icone{border-radius:var(--r-icone);display:grid;place-items:center;flex:none;overflow:hidden;
-       box-shadow:inset 0 0 0 .5px rgba(0,0,0,.09);position:relative}
-.icone span{font-size:52%;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+       box-shadow:inset 0 0 0 .5px rgba(0,0,0,.09);position:relative;font-size:60px}
+.icone span{font-size:.55em;line-height:1;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .icone img{width:100%;height:100%;object-fit:cover}
 
 /* ---------- Ligne d'application ---------- */
 .liste{background:var(--carte);margin:0 16px;border-radius:18px;box-shadow:var(--ombre);overflow:hidden}
 .ligne{display:flex;align-items:center;gap:13px;padding:11px 14px;width:100%;text-align:left}
 .ligne+.ligne{border-top:.5px solid var(--sep);}
-.ligne .ico{width:60px;height:60px}
+.ligne .ico{width:60px;height:60px;font-size:60px}
 .ligne .txt{flex:1;min-width:0}
 .ligne .nom{font-size:16px;font-weight:500;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ligne .st{font-size:13px;color:var(--texte2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
@@ -115,7 +117,7 @@ a{color:var(--bleu);text-decoration:none}
 .hero .visuel .etiq{position:absolute;top:16px;left:18px;color:rgba(255,255,255,.92);font-size:12px;
                     font-weight:700;letter-spacing:.7px;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
 .hero .bas{display:flex;align-items:center;gap:13px;padding:13px 14px}
-.hero .bas .ico{width:58px;height:58px}
+.hero .bas .ico{width:58px;height:58px;font-size:58px}
 
 /* ---------- Recherche ---------- */
 .champrech{margin:8px 16px 4px;display:flex;align-items:center;gap:8px;background:var(--carte2);
@@ -142,7 +144,7 @@ a{color:var(--bleu);text-decoration:none}
 /* Un span n'est pas cliquable pour Safari iOS : tout ce qui porte .pilule est un bouton */
 .pilule{cursor:pointer}
 .entete{display:flex;gap:15px;padding:18px 20px 4px;align-items:flex-start}
-.entete .ico{width:108px;height:108px}
+.entete .ico{width:108px;height:108px;font-size:108px}
 .entete .bloc{flex:1;min-width:0;padding-top:4px}
 .entete h3{margin:0;font-size:22px;font-weight:600;letter-spacing:-.4px;line-height:1.15}
 .entete .cat{color:var(--texte2);font-size:14px;margin-top:4px}
@@ -249,7 +251,7 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 .chev.bas{transform:rotate(90deg)}
 .vligne{display:flex;align-items:center;gap:12px;padding:10px 14px;width:100%;text-align:left}
 .vligne+.vligne,.vpanneau+.vligne{border-top:.5px solid var(--sep)}
-.vligne .ico{width:38px;height:38px}
+.vligne .ico{width:38px;height:38px;font-size:38px}
 .vligne .vnom{flex:1;min-width:0;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vligne .etats{font-size:11px;color:var(--texte2);white-space:nowrap}
 .vpanneau{padding:2px 14px 12px;background:var(--carte2)}
@@ -430,9 +432,10 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.6.0";
+const VERSION = "1.7.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.7.0", d:"20 septembre 2026", c:"Correction des emojis d'icônes, qui restaient minuscules quelle que soit la taille de la pastille : leur taille était exprimée en pourcentage du texte hérité et non du côté de l'icône. Ils occupent désormais 55 % de la pastille partout — listes, mises en avant, fiche et réglages de visibilité." },
   { n:"1.6.0", d:"20 septembre 2026", c:"Correction du bouton OUVRIR de la fiche, qui ne réagissait pas sur iPhone : c'était un simple span, dont Safari ne propage pas le clic. Il devient un vrai bouton. Le second bouton OUVRIR, celui de la barre du haut, ne se montre plus que lorsque la fiche est défilée et que le premier n'est plus visible, comme dans l'App Store — les deux ne sont donc plus affichés en même temps." },
   { n:"1.5.0", d:"20 septembre 2026", c:"Installation sur l'écran d'accueil : icône dédiée, nom court, manifeste et ouverture en plein écran, sans les barres de Safari. Un message explique la marche à suivre au premier lancement dans Safari sur iPhone, et se referme définitivement d'un geste. Tant qu'on reste dans Safari, la barre d'onglets réserve la place prise par la barre d'adresse au lieu de passer dessous." },
   { n:"1.4.0", d:"20 septembre 2026", c:"« Chercher de nouvelles applications » annonce d'abord ce qu'il va faire — parcourir tous les dépôts du compte, n'ajouter que ceux qui contiennent une page HTML et ne figurent pas encore au catalogue, sans toucher aux descriptifs, aux captures ni aux réglages de visibilité — et attend une confirmation. Pendant la recherche, le bouton devient « Arrêter la recherche » : l'arrêt est immédiat et ce qui a déjà été trouvé est conservé." },
