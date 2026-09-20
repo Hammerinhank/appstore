@@ -1,6 +1,6 @@
 {
   "version": "1.3.0",
-  "maj": "2026-09-20T15:28:29.910Z",
+  "maj": "2026-09-20T16:01:56.572Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -55,7 +55,9 @@
         "#b3541e",
         "#ffb457"
       ],
-      "captures": [],
+      "captures": [
+        "screens/app-pente/1-1789920114192.jpg"
+      ],
       "maj": "2026-09-02T21:39:22Z",
       "cache": false,
       "pasAujourdhui": false,
@@ -491,8 +493,8 @@
       "captures": [],
       "maj": "2026-09-20T15:24:38Z",
       "cache": false,
-      "pasAujourdhui": false,
-      "particuliere": false
+      "pasAujourdhui": true,
+      "particuliere": true
     },
     {
       "depot": "DepotCreeAutomatiquement",
