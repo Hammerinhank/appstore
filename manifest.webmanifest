@@ -1,0 +1,16 @@
+{
+  "name": "Mes Apps",
+  "short_name": "Mes Apps",
+  "description": "Catalogue de mes applications, à la manière de l'App Store.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f2f7",
+  "theme_color": "#f2f2f7",
+  "lang": "fr",
+  "icons": [
+    { "src": "icone-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
