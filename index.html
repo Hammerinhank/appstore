@@ -152,6 +152,10 @@ a{color:var(--bleu);text-decoration:none}
 .shot img{width:100%;height:100%;object-fit:cover;display:block}
 .shot .sup{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;
            background:rgba(0,0,0,.55);color:#fff;font-size:13px;display:grid;place-items:center}
+.shot .attente{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);color:#fff;
+               font-size:11.5px;line-height:1.3;padding:7px 10px;text-align:center;letter-spacing:.1px}
+.shot .absente{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:22px;
+               color:var(--texte2);font-size:13px;line-height:1.4;background:var(--carte2)}
 .shotvide{flex:none;width:232px;aspect-ratio:9/19.5;border-radius:20px;display:grid;place-items:center;
           gap:10px;text-align:center;padding:24px;box-shadow:inset 0 0 0 1.5px var(--sep);color:var(--texte2);
           font-size:14px;line-height:1.4;scroll-snap-align:center}
@@ -319,9 +323,10 @@ a{color:var(--bleu);text-decoration:none}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.0.0";
+const VERSION = "1.1.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.1.0", d:"20 septembre 2026", c:"Les captures qui viennent d'être envoyées s'affichent immédiatement depuis l'appareil, sans attendre la publication par GitHub Pages. Un bandeau « Publication en cours » signale celles qui ne sont pas encore servies en ligne, et l'application bascule d'elle-même sur la version en ligne dès qu'elle répond (contrôle toutes les 5 secondes pendant 10 minutes). Une capture publiée mais momentanément indisponible affiche un message au lieu d'une image cassée." },
   { n:"1.0.0", d:"20 septembre 2026", c:"Première version. Catalogue des 27 applications HTML des dépôts publics, présentation façon App Store (Aujourd'hui, Apps, Recherche, Réglages), fiche détaillée par app, carrousel de captures d'écran, rafraîchissement du catalogue depuis l'API GitHub avec décompte de progression, envoi des captures vers le dépôt et publication d'apps.json." }
 ];
 
@@ -632,9 +637,14 @@ function ouvrirFiche(depot){
   if (!a) return;
   appCourante = a;
 
-  const shots = (a.captures||[]).map((src,i) =>
-      '<div class="shot"><img src="'+esc(src)+'?t='+Date.now()+'" alt="Capture '+(i+1)+' de '+esc(a.nom)+'" loading="lazy">'
-    + '<button class="sup" data-sup="'+i+'" aria-label="Supprimer cette capture">✕</button></div>').join("");
+  const shots = (a.captures||[]).map((src,i) => {
+    const local = apercusLocaux[src];
+    return '<div class="shot" data-chemin="'+esc(src)+'">'
+      + '<img src="'+esc(local || (src + "?t=" + Date.now()))+'" '
+      +      'alt="Capture '+(i+1)+' de '+esc(a.nom)+'" loading="lazy">'
+      + (local ? '<div class="attente">Publication en cours sur GitHub Pages…</div>' : '')
+      + '<button class="sup" data-sup="'+i+'" aria-label="Supprimer cette capture">✕</button></div>';
+  }).join("");
 
   const ajout = '<button class="shotvide" id="btnAjoutCapture">'
     + '<span class="plus">＋</span><span>Ajouter une capture<br>prise sur cet appareil</span></button>';
@@ -671,6 +681,73 @@ function ouvrirFiche(depot){
   $("#fiche").classList.add("ouvert");
   $("#fiche").scrollTop = 0;
   document.body.style.overflow = "hidden";
+  surveillerCaptures();
+}
+
+/* --- Aperçus locaux : une capture reste visible depuis l'appareil tant que
+       GitHub Pages ne la sert pas encore (la publication prend 20 à 60 s). --- */
+const apercusLocaux = {};          // chemin dans le dépôt  ->  image en data URL
+const surveillances = {};          // chemin  ->  identifiant de minuteur
+
+function surveillerCaptures(){
+  $$("#ficheCorps .shot").forEach(bloc => {
+    const chemin = bloc.dataset.chemin;
+    const img = $("img", bloc);
+    if (!chemin || !img) return;
+
+    if (apercusLocaux[chemin]){
+      lancerControle(chemin);                       // en attente de publication
+    }else{
+      img.onerror = () => montrerAbsente(chemin);   // publiée mais pas encore servie
+    }
+  });
+}
+
+function lancerControle(chemin){
+  if (surveillances[chemin]) return;                // déjà sous surveillance
+  let essais = 0;
+  const MAX = 120;                                  // 120 × 5 s = 10 minutes
+
+  const controler = () => {
+    essais++;
+    const sonde = new Image();
+    sonde.onload = () => {
+      delete apercusLocaux[chemin];
+      clearInterval(surveillances[chemin]);
+      delete surveillances[chemin];
+      $$('#ficheCorps .shot[data-chemin="'+chemin.replace(/"/g,'\\"')+'"]').forEach(b => {
+        const i = $("img", b); if (i) i.src = chemin + "?t=" + Date.now();
+        const w = $(".attente", b); if (w) w.remove();
+        const x = $(".absente", b); if (x) x.remove();
+      });
+      log("✅ Publiée : " + chemin);
+    };
+    sonde.onerror = () => {
+      if (essais >= MAX){
+        clearInterval(surveillances[chemin]);
+        delete surveillances[chemin];
+        $$('#ficheCorps .shot[data-chemin="'+chemin.replace(/"/g,'\\"')+'"] .attente').forEach(w => {
+          w.textContent = "Toujours pas publiée. Vérifiez l'onglet Actions du dépôt.";
+        });
+        log("⚠️ Publication non confirmée après 10 min : " + chemin);
+      }
+    };
+    sonde.src = chemin + "?t=" + Date.now();
+  };
+
+  controler();
+  surveillances[chemin] = setInterval(controler, 5000);
+}
+
+function montrerAbsente(chemin){
+  $$('#ficheCorps .shot[data-chemin="'+chemin.replace(/"/g,'\\"')+'"]').forEach(b => {
+    if ($(".absente", b)) return;
+    const d = document.createElement("div");
+    d.className = "absente";
+    d.textContent = "Capture indisponible pour l'instant. Elle apparaîtra dès que GitHub Pages l'aura publiée.";
+    b.appendChild(d);
+  });
+  lancerControle(chemin);
 }
 function infoLigne(k,v,brut){
   return '<div class="infoligne"><span class="k">'+esc(k)+'</span>'
@@ -835,6 +912,7 @@ async function envoyerCaptures(fichiers){
       const num  = ((a.captures||[]).length + 1);
       const chemin = "screens/" + a.depot + "/" + num + "-" + Date.now() + ".jpg";
       await ecrireFichier(chemin, jpeg.split(",")[1], "Capture pour " + a.nom);
+      apercusLocaux[chemin] = jpeg;      // visible tout de suite, avant publication
       a.captures = (a.captures||[]).concat([chemin]);
       log("📸 " + chemin);
     }catch(e){ log("❌ capture " + n + " : " + e.message); toast("Échec : " + e.message); }
@@ -842,6 +920,7 @@ async function envoyerCaptures(fichiers){
   localStorage.setItem(CLE_CACHE, JSON.stringify({ version:VERSION, maj:new Date().toISOString(), apps:apps }));
   ouvrirFiche(a.depot);
   toast(total + " capture(s) envoyée(s) — publiez apps.json");
+  log("Captures envoyées. Mise en ligne par GitHub Pages en cours (20 à 60 s en général).");
 }
 
 function compresser(fichier, largeurMax, qualite){
