@@ -1,0 +1,434 @@
+{
+  "version": "1.2.0",
+  "maj": "2026-09-20T12:52:05.183Z",
+  "apps": [
+    {
+      "depot": "Tourisme",
+      "nom": "Où suis-je ?",
+      "emoji": "📍",
+      "cat": "Voyage",
+      "st": "Tout savoir sur l'endroit où vous êtes",
+      "d": "Affiche votre position sur une carte, retrouve l'adresse exacte, ouvre la vue Street View et va chercher l'article encyclopédique du lieu ainsi que des photos.\nChaque lieu consulté est conservé dans un historique que l'on peut rouvrir, revoir ou oublier, avec une sauvegarde en ligne sur GitHub.\nUn journal technique permet de comprendre ce que l'application a interrogé quand un résultat surprend.",
+      "c": [
+        "#1f6feb",
+        "#7fd4ff"
+      ],
+      "captures": [
+        "screens/Tourisme/1-1789908718114.jpg",
+        "screens/Tourisme/2-1789908720488.jpg",
+        "screens/Tourisme/3-1789908722895.jpg"
+      ],
+      "maj": "2026-09-19T10:07:14Z"
+    },
+    {
+      "depot": "test-app",
+      "nom": "Ma Géolocalisation",
+      "emoji": "🚗",
+      "cat": "Voyage",
+      "st": "Retrouver sa voiture, garder ses étapes",
+      "d": "Mémorise l'endroit où la voiture est garée et vous y ramène par Google Maps, avec la distance à vol d'oiseau et la possibilité de corriger le point sur la carte.\nLes lieux marqués comme intéressants et tous les stationnements forment un relevé d'étapes conservé de façon chiffrée sur GitHub.\nCe relevé se transforme en texte prêt à donner à une IA pour en faire un récit de voyage.",
+      "c": [
+        "#0b7a5b",
+        "#5ddba0"
+      ],
+      "captures": [
+        "screens/test-app/1-1789907395542.jpg",
+        "screens/test-app/2-1789907398301.jpg",
+        "screens/test-app/3-1789907400618.jpg"
+      ],
+      "maj": "2026-09-18T11:47:47Z"
+    },
+    {
+      "depot": "app-pente",
+      "nom": "Pente",
+      "emoji": "📐",
+      "cat": "Navigation",
+      "st": "Inclinomètre GPS pour la route",
+      "d": "Mesure en temps réel la pente de la route en pourcentage à partir du GPS, avec verrouillage d'une valeur tous les cent mètres parcourus et deux graphiques du relief.\nUne méthode à deux points calcule le dénivelé entre deux endroits capturés à la main.\nLe récapitulatif des sections est conservé d'une sortie à l'autre, organisé par séries, avec carte du parcours.",
+      "c": [
+        "#b3541e",
+        "#ffb457"
+      ],
+      "captures": [],
+      "maj": "2026-09-02T21:39:22Z"
+    },
+    {
+      "depot": "vins",
+      "nom": "Cave à Vin",
+      "emoji": "🍷",
+      "cat": "Nourriture & boissons",
+      "st": "L'inventaire de votre cave, bouteille par bouteille",
+      "d": "Suit les bouteilles en cave et leur emplacement, avec entrée et sortie, photo d'étiquette, notes de dégustation et filtres par couleur.\nUne saisie rapide lit l'étiquette pour remplir la fiche, et un classement signale les vins à boire maintenant.\nSauvegarde sur GitHub et sur Google Drive, avec vérification avant chaque envoi.",
+      "c": [
+        "#6b1233",
+        "#d4527a"
+      ],
+      "captures": [],
+      "maj": "2026-09-14T17:09:02Z"
+    },
+    {
+      "depot": "restaurants",
+      "nom": "Restaurants",
+      "emoji": "🍽️",
+      "cat": "Nourriture & boissons",
+      "st": "Vos adresses sur une carte",
+      "d": "Enregistre un restaurant à l'endroit où vous vous trouvez, retrouve son nom et son adresse, et propose les établissements voisins quand l'adresse est ambiguë.\nChaque fiche accepte des photos et une vue Street View intégrée.\nPlusieurs listes cohabitent, synchronisées sur GitHub, avec un diagnostic réseau en cas de souci.",
+      "c": [
+        "#a3341b",
+        "#ff9466"
+      ],
+      "captures": [],
+      "maj": "2026-09-16T18:17:45Z"
+    },
+    {
+      "depot": "bibliotheque",
+      "nom": "Bibliothèques",
+      "emoji": "📚",
+      "cat": "Références",
+      "st": "Photographiez vos rayonnages, l'IA fait la liste",
+      "d": "Décrit chaque bibliothèque par ses rangées et ses compartiments, puis analyse une photo de rayonnage avec Gemini pour en extraire titres, auteurs, années et catégories.\nLa liste des livres se consulte et se corrige compartiment par compartiment.\nExport, import et synchronisation GitHub pour ne rien perdre.",
+      "c": [
+        "#4c3b8f",
+        "#a99bf0"
+      ],
+      "captures": [],
+      "maj": "2026-09-20T09:57:53Z"
+    },
+    {
+      "depot": "prix",
+      "nom": "Prix",
+      "emoji": "🧾",
+      "cat": "Finance",
+      "st": "Vos tickets de caisse lus par l'IA",
+      "d": "Photographiez un ticket de caisse : Gemini en extrait le magasin, la date et le détail des produits avec leur prix.\nLes lignes restent modifiables avant enregistrement, et l'application compare les prix d'un achat à l'autre.\nToutes les données tiennent dans un seul fichier JSON hébergé sur GitHub.",
+      "c": [
+        "#1b6b52",
+        "#68d6a8"
+      ],
+      "captures": [],
+      "maj": "2026-09-20T09:49:28Z"
+    },
+    {
+      "depot": "anniversaires",
+      "nom": "Anniversaires & Fêtes",
+      "emoji": "🎂",
+      "cat": "Style de vie",
+      "st": "Un rappel la veille, par courriel",
+      "d": "Tient la liste des anniversaires et des fêtes, triée par date ou par ordre alphabétique.\nUn automate hébergé sur GitHub envoie un courriel de rappel la veille de chaque date, vers les adresses de votre choix.\nUn test à la demande et un diagnostic Gmail permettent de vérifier que l'envoi fonctionne sans attendre la prochaine date.",
+      "c": [
+        "#b02a6b",
+        "#ff9ecb"
+      ],
+      "captures": [],
+      "maj": "2026-08-28T22:05:21Z"
+    },
+    {
+      "depot": "genealogie",
+      "nom": "Éventail généalogique",
+      "emoji": "🌳",
+      "cat": "Références",
+      "st": "Votre descendance en arc de cercle",
+      "d": "Dessine un arbre en anneaux concentriques, à la manière des chartes généalogiques imprimées, avec choix du nombre de générations et affichage des dates.\nLes personnes s'éditent directement dans l'arborescence.\nPlusieurs généalogies cohabitent, chacune associée à son fichier GitHub, avec import et export JSON.",
+      "c": [
+        "#2f6b3a",
+        "#8fd98f"
+      ],
+      "captures": [],
+      "maj": "2026-08-26T09:06:00Z"
+    },
+    {
+      "depot": "checkwordsvn",
+      "nom": "Sửa lỗi",
+      "emoji": "✍️",
+      "cat": "Éducation",
+      "st": "Correcteur de frappe vietnamien",
+      "d": "Envoie votre texte vietnamien à ChatGPT et affiche la correction avec les mots modifiés en évidence, que l'on garde ou que l'on supprime d'un geste.\nPropose aussi la ponctuation, la traduction en français et les listes de vocabulaire par niveau.\nLes textes de travail sont rangés dans un dépôt GitHub et se retrouvent d'un appareil à l'autre.",
+      "c": [
+        "#a8232c",
+        "#ffb3b3"
+      ],
+      "captures": [],
+      "maj": "2026-09-13T14:21:09Z"
+    },
+    {
+      "depot": "mon-projet",
+      "nom": "Vocabulaire & IA",
+      "emoji": "🇻🇳",
+      "cat": "Éducation",
+      "st": "Réviser le vietnamien, section par section",
+      "d": "Jeu d'association entre vietnamien et français, organisé en sections, avec masquage, tri, nuage de maîtrise et rapport de progression.\nGemini ou ChatGPT complètent les entrées manquantes, avec validation de la réponse avant intégration.\nLes données et l'avancement sont synchronisés sur GitHub.",
+      "c": [
+        "#0f5f8f",
+        "#68c8ff"
+      ],
+      "captures": [],
+      "maj": "2026-09-18T11:51:49Z"
+    },
+    {
+      "depot": "nom_projet_Claude",
+      "nom": "Vocabulaire Vietnamien",
+      "emoji": "🧠",
+      "cat": "Éducation",
+      "st": "Mémorisation par répétition espacée",
+      "d": "Propose une session quotidienne de vocabulaire selon la méthode de Leitner, avec plusieurs modes d'apprentissage et prononciation audio.\nUn tableau de bord suit les statistiques et les mots à revoir.\nExport et import des données, remise à zéro de la progression, mode sombre.",
+      "c": [
+        "#5b2d8f",
+        "#c39bff"
+      ],
+      "captures": [],
+      "maj": "2026-02-01T18:16:36Z"
+    },
+    {
+      "depot": "analyserTexteVietnamien",
+      "nom": "Transformateur Couleur",
+      "emoji": "🎨",
+      "cat": "Utilitaires",
+      "st": "Trier un texte par la couleur de ses mots",
+      "d": "Colorie une sélection de texte puis extrait, regroupe et nettoie les passages selon leur couleur — outil de travail pour les listes de vocabulaire.\nUn analyseur affiche le code HTML sous-jacent quand le collage se passe mal, et la copie conserve la mise en forme.\nSauvegarde dans un dépôt GitHub ou dans un Gist.",
+      "c": [
+        "#c2571a",
+        "#ffc178"
+      ],
+      "captures": [],
+      "maj": "2026-08-12T15:32:43Z"
+    },
+    {
+      "depot": "NombreDeCoursDeViernamienParProfesseur",
+      "nom": "Cours de vietnamien",
+      "emoji": "📊",
+      "cat": "Éducation",
+      "st": "Combien de cours, avec quel professeur",
+      "d": "Récapitule les cours pris sur les trente derniers jours et la progression mois par mois, professeur par professeur.\nLecture immédiate, sans réglage ni identifiant.",
+      "c": [
+        "#1a5f7a",
+        "#7fd0e8"
+      ],
+      "captures": [],
+      "maj": "2026-09-19T19:35:42Z"
+    },
+    {
+      "depot": "deployer",
+      "nom": "Le Déployeur",
+      "emoji": "🚀",
+      "cat": "Développement",
+      "st": "Publier vos apps sur GitHub Pages",
+      "d": "Envoie le code d'une application vers son dépôt GitHub, vérifie par relecture que la publication a bien eu lieu et surveille la mise en ligne effective sur GitHub Pages.\nGère la liste des applications cibles, l'historique des versions avec restauration, les autres fichiers du dépôt et la création d'un nouveau dépôt complet.\nInclut un contrôle de sécurité qui repère les jetons écrits en dur dans le code.",
+      "c": [
+        "#1f3a8a",
+        "#7aa5ff"
+      ],
+      "captures": [],
+      "maj": "2026-09-20T10:11:36Z"
+    },
+    {
+      "depot": "Supp-doublon",
+      "nom": "Supprime-doublon",
+      "emoji": "🧹",
+      "cat": "Développement",
+      "st": "Faire le ménage dans vos dépôts",
+      "d": "Liste les fichiers d'un dépôt avec leur casse exacte et repère les doublons du type index.html contre Index.html, puis supprime le fichier visé proprement.\nUn inventaire général parcourt tous les dépôts et tous les gists, avec le nombre de versions de chaque fichier.\nAperçu des pages HTML, lecture des fichiers texte et structure des fichiers JSON sans quitter l'application.",
+      "c": [
+        "#4a4a52",
+        "#a6a6b2"
+      ],
+      "captures": [],
+      "maj": "2026-09-03T09:49:46Z"
+    },
+    {
+      "depot": "tokens",
+      "nom": "Changer mes tokens",
+      "emoji": "🔑",
+      "cat": "Utilitaires",
+      "st": "Renouveler ses jetons sans rien casser",
+      "d": "Retrouve tous les jetons GitHub stockés par les autres applications sur cet appareil, les teste et les remplace en une fois par le nouveau.\nSauvegarde téléchargeable avant modification, restauration possible.\nSuit l'état des quatre navigateurs utilisés pour savoir lequel reste à mettre à jour.",
+      "c": [
+        "#8a6d1f",
+        "#ffd977"
+      ],
+      "captures": [],
+      "maj": "2026-09-14T21:47:34Z"
+    },
+    {
+      "depot": "codehtml",
+      "nom": "Éditeur HTML",
+      "emoji": "🗂️",
+      "cat": "Développement",
+      "st": "Préparer, mettre en forme, prévisualiser",
+      "d": "Trois espaces repliables : la préparation d'une requête à ChatGPT ou Gemini, le modèle de mise en forme, puis l'éditeur HTML avec aperçu du rendu.\nLes instructions et les données sont conservées dans un dépôt GitHub et synchronisées entre appareils.\nDiagnostic complet et test de tous les jetons en un bouton.",
+      "c": [
+        "#2b4a7a",
+        "#8fc0ff"
+      ],
+      "captures": [],
+      "maj": "2026-09-17T08:54:16Z"
+    },
+    {
+      "depot": "boxinternet",
+      "nom": "Journal",
+      "emoji": "📶",
+      "cat": "Utilitaires",
+      "st": "La box et les scripts sous surveillance",
+      "d": "Lit les relevés de connexion et de redémarrage de la box et en donne une synthèse lisible, un résumé et le journal détaillé.\nDéclare les scripts à surveiller, leur mode de suivi et le seuil d'alerte au-delà duquel le silence devient suspect.\nTout est lu et écrit dans le dépôt GitHub correspondant.",
+      "c": [
+        "#1c5c5c",
+        "#74d6d6"
+      ],
+      "captures": [],
+      "maj": "2026-09-20T11:35:34Z"
+    },
+    {
+      "depot": "cameras",
+      "nom": "CameraOnOff",
+      "emoji": "📷",
+      "cat": "Utilitaires",
+      "st": "Vos caméras s'éteignent quand vous rentrez",
+      "d": "Commande les caméras Nest depuis le téléphone et les coupe automatiquement selon votre position, en dialoguant avec le serveur qui tourne sur l'iMac.\nDiagnostic de démarrage, fichiers attendus, commandes à lancer et journal de supervision réunis dans la même page.\nUn cache local garde les dernières données connues quand le serveur ne répond pas.",
+      "c": [
+        "#3b3b8f",
+        "#9b9bf5"
+      ],
+      "captures": [],
+      "maj": "2026-09-11T06:04:04Z"
+    },
+    {
+      "depot": "accederimac",
+      "nom": "Fichiers de l'iMac",
+      "emoji": "💻",
+      "cat": "Utilitaires",
+      "st": "Déposer un fichier sur l'ordinateur",
+      "d": "Envoie des fichiers depuis le téléphone vers un dossier choisi de l'iMac, par glisser-déposer ou sélection, en passant par le service qui écoute sur la machine.\nPermet de créer un dossier, de vérifier son existence et de parcourir son contenu.\nTest de connexion, état du service et possibilité de l'arrêter ou de le relancer.",
+      "c": [
+        "#555560",
+        "#b9b9c6"
+      ],
+      "captures": [],
+      "maj": "2026-09-19T17:34:50Z"
+    },
+    {
+      "depot": "geminiPhoto",
+      "nom": "Requête Gemini",
+      "emoji": "✨",
+      "cat": "Utilitaires",
+      "st": "Une question, une photo, une réponse",
+      "d": "Pose une question à Gemini avec, si besoin, une photo prise sur le moment ou choisie dans la photothèque.\nLe modèle se choisit selon que l'on veut une réponse rapide ou plus fouillée.\nLa réponse se copie d'un geste ou s'enregistre sur le serveur.",
+      "c": [
+        "#6b3fa0",
+        "#c9a6ff"
+      ],
+      "captures": [],
+      "maj": "2026-09-12T12:07:38Z"
+    },
+    {
+      "depot": "Audio",
+      "nom": "Bande-son",
+      "emoji": "🎵",
+      "cat": "Photo & vidéo",
+      "st": "Extraire et analyser le son d'une vidéo",
+      "d": "Charge une vidéo, en extrait la piste audio et l'exporte en WAV, entièrement sur l'appareil et sans rien transmettre.\nAffiche la forme d'onde, le spectrogramme, le spectre moyen et le spectre en temps réel pendant la lecture.\nUne voie de secours permet d'extraire le son en lisant la vidéo quand le décodage direct échoue.",
+      "c": [
+        "#7a1f5c",
+        "#ff8fd0"
+      ],
+      "captures": [],
+      "maj": "2026-07-29T22:33:16Z"
+    },
+    {
+      "depot": "vignettes",
+      "nom": "Tri des vignettes",
+      "emoji": "🗓️",
+      "cat": "Photo & vidéo",
+      "st": "Classer ses photos mois par mois",
+      "d": "Parcourt les photos par année et par mois, avec filtres, séries et albums, pour faire le tri sans ouvrir la photothèque.\nChaque vignette porte ses métadonnées et des notes de netteté, composition, lumière et cadrage.\nLe classement d'un mois s'exporte une fois terminé.",
+      "c": [
+        "#0f6b8f",
+        "#7fd8f5"
+      ],
+      "captures": [],
+      "maj": "2026-09-11T19:09:45Z"
+    },
+    {
+      "depot": "puzzle",
+      "nom": "Console Puzzle",
+      "emoji": "🧩",
+      "cat": "Développement",
+      "st": "Piloter la reconnaissance de pièces",
+      "d": "Lance les étapes du traitement des pièces de puzzle une par une ou en chaîne, et affiche leur sortie au fur et à mesure.\nPermet de reprendre le pipeline à partir d'une étape précise et d'interrompre un traitement en cours.\nLe serveur de traitement se pilote depuis la même page.",
+      "c": [
+        "#8f5b1f",
+        "#ffce8f"
+      ],
+      "captures": [],
+      "maj": "2026-09-12T06:20:29Z"
+    },
+    {
+      "depot": "niveau",
+      "nom": "Niveau 3 axes",
+      "emoji": "📏",
+      "cat": "Utilitaires",
+      "st": "Un niveau à bulle dans la poche",
+      "d": "Utilise les capteurs du téléphone pour indiquer l'inclinaison sur les trois axes.\nUne seule page, aucun réglage : on autorise les capteurs et c'est prêt.",
+      "c": [
+        "#4a6b1f",
+        "#bfe88f"
+      ],
+      "captures": [],
+      "maj": "2026-08-25T20:54:06Z"
+    },
+    {
+      "depot": "creerAlbumPhoto",
+      "nom": "Créateur d'albums",
+      "emoji": "🖼️",
+      "cat": "Photo & vidéo",
+      "st": "Créer des albums Photos en série",
+      "d": "Prépare la création d'albums dans l'application Photos d'iOS à partir d'une liste.\nOutil volontairement minimal, fait pour une tâche unique.",
+      "c": [
+        "#a0523f",
+        "#ffb39e"
+      ],
+      "captures": [],
+      "maj": "2026-07-31T15:57:35Z"
+    },
+    {
+      "depot": "appstore",
+      "nom": "appstore",
+      "emoji": "🆕",
+      "cat": "Utilitaires",
+      "st": "Nouvelle application à décrire",
+      "d": "Cette application vient d'être trouvée dans vos dépôts. Son descriptif reste à écrire.",
+      "c": [
+        "#5a5a66",
+        "#b0b0bd"
+      ],
+      "captures": [],
+      "maj": "2026-09-20T10:21:41Z"
+    },
+    {
+      "depot": "DepotCreeAutomatiquement",
+      "nom": "DepotCreeAutomatiquement",
+      "emoji": "🆕",
+      "cat": "Utilitaires",
+      "st": "Nouvelle application à décrire",
+      "d": "Cette application vient d'être trouvée dans vos dépôts. Son descriptif reste à écrire.",
+      "c": [
+        "#5a5a66",
+        "#b0b0bd"
+      ],
+      "captures": [],
+      "maj": "2026-07-25T20:25:16Z"
+    },
+    {
+      "depot": "planningprofesseurs",
+      "nom": "planningprofesseurs",
+      "emoji": "🆕",
+      "cat": "Utilitaires",
+      "st": "Nouvelle application à décrire",
+      "d": "Cette application vient d'être trouvée dans vos dépôts. Son descriptif reste à écrire.",
+      "c": [
+        "#5a5a66",
+        "#b0b0bd"
+      ],
+      "captures": [],
+      "maj": "2026-08-10T08:07:15Z"
+    }
+  ]
+}
