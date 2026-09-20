@@ -218,6 +218,25 @@ a{color:var(--bleu);text-decoration:none}
 
 /* Fenêtre de confirmation */
 .q{font-size:15.5px;line-height:1.5;margin:4px 0 20px}
+
+/* Réglages de visibilité */
+.chev{float:right;transition:transform .2s;display:inline-block}
+.chev.bas{transform:rotate(90deg)}
+.vligne{display:flex;align-items:center;gap:12px;padding:10px 14px;width:100%;text-align:left}
+.vligne+.vligne,.vpanneau+.vligne{border-top:.5px solid var(--sep)}
+.vligne .ico{width:38px;height:38px}
+.vligne .vnom{flex:1;min-width:0;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vligne .etats{font-size:11px;color:var(--texte2);white-space:nowrap}
+.vpanneau{padding:2px 14px 12px;background:var(--carte2)}
+.coche{display:flex;align-items:flex-start;gap:11px;padding:10px 2px;cursor:pointer}
+.coche+.coche{border-top:.5px solid var(--sep)}
+.coche input{position:absolute;opacity:0;pointer-events:none}
+.case{flex:none;width:23px;height:23px;border-radius:7px;background:var(--pilule);
+      display:grid;place-items:center;margin-top:1px;color:transparent;font-size:14px;font-weight:700}
+.coche input:checked+.case{background:var(--bleu);color:#fff}
+.coche input:focus-visible+.case{outline:2px solid var(--bleu);outline-offset:2px}
+.coche .lib{font-size:15px;line-height:1.35}
+.coche .lib small{display:block;color:var(--texte2);font-size:12.5px;line-height:1.35;margin-top:2px}
 .actionsmod{display:flex;flex-direction:column;gap:10px}
 .bt-pri{background:var(--bleu);color:#fff;font-weight:600;font-size:17px;padding:13px;border-radius:14px}
 .bt-pri.dan{background:#ff3b30}
@@ -306,6 +325,12 @@ a{color:var(--bleu);text-decoration:none}
       <div class="souslib">Parcourt vos dépôts GitHub et ajoute au catalogue celles qui n'y figurent pas encore.
         Ne modifie ni vos descriptifs ni vos captures.</div>
 
+      <div class="grptitre">Visibilité des applications</div>
+      <button class="gros-bouton sec" id="btnVisi">Gérer la liste<span class="chev" id="chevVisi">›</span></button>
+      <div class="souslib">Touchez une application pour choisir si elle apparaît dans le catalogue,
+        sur l'écran Aujourd'hui, ou dans une section à part.</div>
+      <div class="liste" id="zoneVisi" style="margin-bottom:22px" hidden></div>
+
       <div class="grptitre">Accès GitHub</div>
       <div class="grp">
         <div class="champ"><label>Utilisateur</label><input id="cfgUser" placeholder="Hammerinhank"></div>
@@ -373,9 +398,10 @@ a{color:var(--bleu);text-decoration:none}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.3.0", d:"20 septembre 2026", c:"Nouvelle section « Visibilité des applications » dans les réglages, repliée par défaut : elle liste toutes les applications et, en touchant l'une d'elles, ouvre trois réglages — la masquer partout sauf dans cette liste, l'écarter de l'écran Aujourd'hui, ou la ranger dans une section « Applications particulières » toujours affichée en dernier. Les choix sont enregistrés sur GitHub avec le reste du catalogue." },
   { n:"1.2.0", d:"20 septembre 2026", c:"Refonte de la sauvegarde. Les captures et les descriptifs sont maintenant envoyés vers GitHub automatiquement, sans étape manuelle à ne pas oublier — c'est ce qui empêchait de les retrouver d'un navigateur à l'autre. Un bandeau en tête des réglages dit en permanence où en est la sauvegarde et depuis quand. Les boutons portent un nom qui dit ce qu'ils font, avec une phrase d'explication dessous, et toute opération qui écrase quelque chose demande confirmation en nommant ce qui sera perdu." },
   { n:"1.1.0", d:"20 septembre 2026", c:"Les captures qui viennent d'être envoyées s'affichent immédiatement depuis l'appareil, sans attendre la publication par GitHub Pages. Un bandeau « Publication en cours » signale celles qui ne sont pas encore servies en ligne, et l'application bascule d'elle-même sur la version en ligne dès qu'elle répond (contrôle toutes les 5 secondes pendant 10 minutes). Une capture publiée mais momentanément indisponible affiche un message au lieu d'une image cassée." },
   { n:"1.0.0", d:"20 septembre 2026", c:"Première version. Catalogue des 27 applications HTML des dépôts publics, présentation façon App Store (Aujourd'hui, Apps, Recherche, Réglages), fiche détaillée par app, carrousel de captures d'écran, rafraîchissement du catalogue depuis l'API GitHub avec décompte de progression, envoi des captures vers le dépôt et publication d'apps.json." }
@@ -652,7 +678,8 @@ function normaliser(liste){
   return liste
     .filter(a => a && a.depot && !a.masque && a.nom)
     .map(a => Object.assign({ emoji:"📱", cat:"Utilitaires", st:"", d:"", c:["#5a5a66","#b0b0bd"],
-                              captures:[], maj:null }, a));
+                              captures:[], maj:null,
+                              cache:false, pasAujourdhui:false, particuliere:false }, a));
 }
 
 async function chargerCatalogue(silencieux){
@@ -706,15 +733,23 @@ function ligneApp(a){
     + '<span class="pilule">OUVRIR</span></button>';
 }
 
+const PARTICULIERES = "Applications particulières";
+
+function visibles(){ return apps.filter(a => !a.cache); }
+
 function rendre(){
+  const vis = visibles();
+
   // --- Aujourd'hui : date, mises en avant, récentes
   const d = new Date();
   $("#dateJour").textContent = d.toLocaleDateString("fr-FR",
       { weekday:"long", day:"numeric", month:"long" });
 
+  const pourAujourdhui = vis.filter(a => !a.pasAujourdhui);
   const rang = Math.floor(d.getTime()/864e5);
   const vedettes = [];
-  for (let i=0;i<2 && apps.length;i++) vedettes.push(apps[(rang+i*7) % apps.length]);
+  for (let i=0;i<2 && pourAujourdhui.length;i++)
+    vedettes.push(pourAujourdhui[(rang + i*7) % pourAujourdhui.length]);
 
   $("#heros").innerHTML = vedettes.map(a =>
       '<button class="hero" data-depot="'+esc(a.depot)+'">'
@@ -725,17 +760,23 @@ function rendre(){
     + '<div class="bas">'+htmlIcone(a,"ico")
     +   '<div class="txt"><div class="nom">'+esc(a.nom)+'</div>'
     +   '<div class="st">'+esc(a.st)+'</div></div>'
-    +   '<span class="pilule">OUVRIR</span></div></button>').join("");
+    +   '<span class="pilule">OUVRIR</span></div></button>').join("")
+    || '<div class="vide">Aucune application à mettre en avant. Vérifiez les réglages de visibilité.</div>';
 
-  const recentes = apps.slice().sort((x,y) =>
+  const recentes = pourAujourdhui.slice().sort((x,y) =>
       String(y.maj||"").localeCompare(String(x.maj||""))).slice(0,6);
   $("#listeRecentes").innerHTML = recentes.map(ligneApp).join("");
 
-  // --- Apps : par catégorie
+  // --- Apps : par catégorie, les particulières toujours en dernier
+  const ordinaires = vis.filter(a => !a.particuliere);
+  const apart      = vis.filter(a =>  a.particuliere);
+
   const groupes = {};
-  apps.forEach(a => { (groupes[a.cat] = groupes[a.cat] || []).push(a); });
+  ordinaires.forEach(a => { (groupes[a.cat] = groupes[a.cat] || []).push(a); });
   const ordre = CATS_ORDRE.filter(c => groupes[c])
                 .concat(Object.keys(groupes).filter(c => CATS_ORDRE.indexOf(c) < 0).sort());
+  if (apart.length){ groupes[PARTICULIERES] = apart; ordre.push(PARTICULIERES); }
+
   $("#parCategorie").innerHTML = ordre.map(c =>
       '<div class="sect"><h2>'+esc(c)+'<span class="cnt">'+groupes[c].length+'</span></h2>'
     + '<div class="liste">'
@@ -743,19 +784,21 @@ function rendre(){
     + '</div></div>').join("");
 
   chercher();
+  rendreVisibilite();
 }
 
 function chercher(){
   const q = $("#rech").value.trim().toLowerCase();
   const zone = $("#resRech");
+  const vis = visibles();
   if (!q){
-    zone.innerHTML = '<div class="sect"><h2>Toutes les apps<span class="cnt">'+apps.length+'</span></h2>'
+    zone.innerHTML = '<div class="sect"><h2>Toutes les apps<span class="cnt">'+vis.length+'</span></h2>'
       + '<div class="liste">'
-      + apps.slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(ligneApp).join("")
+      + vis.slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(ligneApp).join("")
       + '</div></div>';
     return;
   }
-  const res = apps.filter(a =>
+  const res = vis.filter(a =>
     (a.nom+" "+a.st+" "+a.d+" "+a.cat+" "+a.depot).toLowerCase().indexOf(q) >= 0);
   zone.innerHTML = res.length
     ? '<div class="sect" style="margin-top:14px"><div class="liste">'+res.map(ligneApp).join("")+'</div></div>'
@@ -893,6 +936,63 @@ function fermerFiche(){
 }
 
 /* ================================================================
+   6 bis. RÉGLAGES DE VISIBILITÉ
+   ================================================================ */
+let visiDeplie = null;        // dépôt dont le panneau est ouvert
+let minuteurEnvoi = null;     // envoi différé, pour ne pas écrire à chaque clic
+
+const REGLAGES_VISI = [
+  { cle:"cache",         lib:"Masquer cette application",
+    exp:"Elle disparaît du catalogue, de la recherche et de l'écran Aujourd'hui. Elle reste dans cette liste." },
+  { cle:"pasAujourdhui", lib:"Ne pas la proposer sur l'écran Aujourd'hui",
+    exp:"Elle reste visible dans Apps et dans la recherche, mais n'est jamais mise en avant." },
+  { cle:"particuliere",  lib:"La ranger dans « " + "Applications particulières" + " »",
+    exp:"Cette section est toujours affichée en dernier dans l'onglet Apps, sous les catégories." }
+];
+
+function etiquettesEtat(a){
+  const e = [];
+  if (a.cache) e.push("masquée");
+  if (a.pasAujourdhui) e.push("hors Aujourd'hui");
+  if (a.particuliere) e.push("à part");
+  return e.join(" · ");
+}
+
+function rendreVisibilite(){
+  const zone = $("#zoneVisi");
+  if (!zone || zone.hidden) return;
+
+  zone.innerHTML = apps.slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(a => {
+    const ouvert = visiDeplie === a.depot;
+    let bloc = '<button class="vligne" data-visi="'+esc(a.depot)+'">'
+      + htmlIcone(a,"ico")
+      + '<span class="vnom">'+esc(a.nom)+'</span>'
+      + '<span class="etats">'+esc(etiquettesEtat(a))+'</span>'
+      + '<span class="chev'+(ouvert?" bas":"")+'">›</span></button>';
+    if (ouvert){
+      bloc += '<div class="vpanneau">' + REGLAGES_VISI.map(r =>
+          '<label class="coche">'
+        +   '<input type="checkbox" data-depot="'+esc(a.depot)+'" data-cle="'+r.cle+'"'
+        +     (a[r.cle] ? " checked" : "") + '>'
+        +   '<span class="case">✓</span>'
+        +   '<span class="lib">'+esc(r.lib)+'<small>'+esc(r.exp)+'</small></span>'
+        + '</label>').join("") + '</div>';
+    }
+    return bloc;
+  }).join("");
+}
+
+function basculerVisi(depot, cle, valeur){
+  const a = apps.find(x => x.depot === depot);
+  if (!a) return;
+  a[cle] = valeur;
+  enregistrerLocal(true);
+  rendre();
+  clearTimeout(minuteurEnvoi);
+  minuteurEnvoi = setTimeout(() => envoyerCatalogue(true), 4000);
+}
+
+/* ================================================================
    7. MODALE
    ================================================================ */
 function modale(titre, html){
@@ -1002,7 +1102,9 @@ async function envoyerCatalogue(auto){
   }
   const contenu = { version:VERSION, maj:new Date().toISOString(),
                     apps: apps.map(a => ({ depot:a.depot, nom:a.nom, emoji:a.emoji, cat:a.cat,
-                                           st:a.st, d:a.d, c:a.c, captures:a.captures||[], maj:a.maj||null })) };
+                                           st:a.st, d:a.d, c:a.c, captures:a.captures||[], maj:a.maj||null,
+                                           cache:!!a.cache, pasAujourdhui:!!a.pasAujourdhui,
+                                           particuliere:!!a.particuliere })) };
   try{
     await ecrireFichier("apps.json",
       b64(JSON.stringify(contenu, null, 2)),
@@ -1211,6 +1313,20 @@ document.addEventListener("click", ev => {
   }
 
   if (t.closest("#btnEnrCfg")){ enregistrerCfg(); return; }
+
+  if (t.closest("#btnVisi")){
+    const zone = $("#zoneVisi");
+    zone.hidden = !zone.hidden;
+    $("#chevVisi").classList.toggle("bas", !zone.hidden);
+    if (!zone.hidden) rendreVisibilite();
+    return;
+  }
+  const vl = t.closest("[data-visi]");
+  if (vl){
+    visiDeplie = (visiDeplie === vl.dataset.visi) ? null : vl.dataset.visi;
+    rendreVisibilite();
+    return;
+  }
   if (t.closest("#btnJetons")){ chercherJetons(); return; }
   if (t.closest("#btnScan")){ rafraichir(); return; }
   if (t.closest("#btnEnvoyer")){ envoyerCatalogue(false); return; }
@@ -1233,6 +1349,11 @@ document.addEventListener("click", ev => {
 });
 
 $("#rech").addEventListener("input", chercher);
+
+document.addEventListener("change", e => {
+  const c = e.target.closest('input[type="checkbox"][data-cle]');
+  if (c) basculerVisi(c.dataset.depot, c.dataset.cle, c.checked);
+});
 $("#fichierCaptures").addEventListener("change", e => {
   const fichiers = Array.from(e.target.files || []);
   e.target.value = "";
