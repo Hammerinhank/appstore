@@ -365,6 +365,23 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
         sur l'écran Aujourd'hui, ou dans une section à part.</div>
       <div class="liste" id="zoneVisi" style="margin-bottom:22px" hidden></div>
 
+      <div class="grptitre">Captures d'écran</div>
+      <div class="grp">
+        <label class="coche" style="padding:12px 14px">
+          <input type="checkbox" id="prmAjout" data-param="bloqueAjout">
+          <span class="case">✓</span>
+          <span class="lib">Interdire l'ajout de captures
+            <small>Le cadre « ＋ Ajouter une capture » disparaît des fiches.</small></span>
+        </label>
+        <label class="coche" style="padding:12px 14px">
+          <input type="checkbox" id="prmSuppr" data-param="bloqueSuppr">
+          <span class="case">✓</span>
+          <span class="lib">Interdire la suppression de captures
+            <small>Les croix ✕ disparaissent des captures.</small></span>
+        </label>
+      </div>
+      <div class="souslib">Propre à ce navigateur : protège des fausses manœuvres sans rien changer dans le dépôt.</div>
+
       <div class="grptitre">Accès GitHub</div>
       <div class="grp">
         <div class="champ"><label>Utilisateur</label><input id="cfgUser" placeholder="Hammerinhank"></div>
@@ -432,9 +449,10 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.7.0";
+const VERSION = "1.8.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.8.0", d:"21 septembre 2026", c:"Nouvelle rubrique « Captures d'écran » dans les réglages, avec deux cases indépendantes : interdire l'ajout de captures (le cadre « ＋ Ajouter » disparaît des fiches) et interdire leur suppression (les croix disparaissent). Réglage propre à chaque navigateur, pris en compte immédiatement, sans rien modifier dans le dépôt." },
   { n:"1.7.0", d:"20 septembre 2026", c:"Correction des emojis d'icônes, qui restaient minuscules quelle que soit la taille de la pastille : leur taille était exprimée en pourcentage du texte hérité et non du côté de l'icône. Ils occupent désormais 55 % de la pastille partout — listes, mises en avant, fiche et réglages de visibilité." },
   { n:"1.6.0", d:"20 septembre 2026", c:"Correction du bouton OUVRIR de la fiche, qui ne réagissait pas sur iPhone : c'était un simple span, dont Safari ne propage pas le clic. Il devient un vrai bouton. Le second bouton OUVRIR, celui de la barre du haut, ne se montre plus que lorsque la fiche est défilée et que le premier n'est plus visible, comme dans l'App Store — les deux ne sont donc plus affichés en même temps." },
   { n:"1.5.0", d:"20 septembre 2026", c:"Installation sur l'écran d'accueil : icône dédiée, nom court, manifeste et ouverture en plein écran, sans les barres de Safari. Un message explique la marche à suivre au premier lancement dans Safari sur iPhone, et se referme définitivement d'un geste. Tant qu'on reste dans Safari, la barre d'onglets réserve la place prise par la barre d'adresse au lieu de passer dessous." },
@@ -597,7 +615,8 @@ const CATS_ORDRE = ["Voyage","Navigation","Nourriture & boissons","Éducation","
 const CLE_CFG = "appstore_cfg";
 const CLE_CACHE = "appstore_catalogue";
 
-let cfg  = { user:PROPRIO_DEFAUT, depot:"appstore", branche:"main", token:"" };
+let cfg  = { user:PROPRIO_DEFAUT, depot:"appstore", branche:"main", token:"",
+             bloqueAjout:false, bloqueSuppr:false };
 let apps = [];
 let appCourante = null;
 
@@ -702,6 +721,8 @@ function chargerCfg(){
   try{ const o = JSON.parse(localStorage.getItem(CLE_CFG)||"{}"); Object.assign(cfg, o); }catch(e){}
   $("#cfgUser").value = cfg.user; $("#cfgDepot").value = cfg.depot;
   $("#cfgBranche").value = cfg.branche; $("#cfgToken").value = cfg.token;
+  $("#prmAjout").checked = !!cfg.bloqueAjout;
+  $("#prmSuppr").checked = !!cfg.bloqueSuppr;
 }
 function enregistrerCfg(){
   cfg.user = $("#cfgUser").value.trim() || PROPRIO_DEFAUT;
@@ -857,11 +878,14 @@ function ouvrirFiche(depot){
       + '<img src="'+esc(local || (src + "?t=" + Date.now()))+'" '
       +      'alt="Capture '+(i+1)+' de '+esc(a.nom)+'" loading="lazy">'
       + (local ? '<div class="attente">Publication en cours sur GitHub Pages…</div>' : '')
-      + '<button class="sup" data-sup="'+i+'" aria-label="Supprimer cette capture">✕</button></div>';
+      + (cfg.bloqueSuppr ? '' :
+         '<button class="sup" data-sup="'+i+'" aria-label="Supprimer cette capture">✕</button>')
+      + '</div>';
   }).join("");
 
-  const ajout = '<button class="shotvide" id="btnAjoutCapture">'
+  const ajout = cfg.bloqueAjout ? '' : '<button class="shotvide" id="btnAjoutCapture">'
     + '<span class="plus">＋</span><span>Ajouter une capture<br>prise sur cet appareil</span></button>';
+  const carrousel = (shots || ajout) ? '<div class="carrousel">'+shots+ajout+'</div>' : '';
 
   const paras = String(a.d||"").split("\n").filter(Boolean)
                 .map(p => '<p>'+esc(p)+'</p>').join("");
@@ -880,7 +904,7 @@ function ouvrirFiche(depot){
     +   '<div class="chip"><div class="k">Prix</div><div class="v">Gratuit</div></div>'
     + '</div>'
 
-    + '<div class="carrousel">'+shots+ajout+'</div>'
+    + carrousel
 
     + '<div class="bloctexte">'
     +   paras
@@ -1246,6 +1270,7 @@ function b64(texte){
    9. CAPTURES D'ÉCRAN
    ================================================================ */
 function choisirCaptures(){
+  if (cfg.bloqueAjout){ toast("L'ajout de captures est interdit dans les réglages"); return; }
   if (!cfg.token){ toast("Renseignez d'abord un jeton dans Réglages"); return; }
   $("#fichierCaptures").click();
 }
@@ -1297,6 +1322,7 @@ function compresser(fichier, largeurMax, qualite){
 }
 
 async function supprimerCapture(i){
+  if (cfg.bloqueSuppr){ toast("La suppression de captures est interdite dans les réglages"); return; }
   const a = appCourante; if (!a) return;
   const chemin = a.captures[i];
   if (!chemin) return;
@@ -1441,7 +1467,14 @@ $("#rech").addEventListener("input", chercher);
 
 document.addEventListener("change", e => {
   const c = e.target.closest('input[type="checkbox"][data-cle]');
-  if (c) basculerVisi(c.dataset.depot, c.dataset.cle, c.checked);
+  if (c){ basculerVisi(c.dataset.depot, c.dataset.cle, c.checked); return; }
+
+  const p = e.target.closest('input[type="checkbox"][data-param]');
+  if (p){
+    cfg[p.dataset.param] = p.checked;
+    localStorage.setItem(CLE_CFG, JSON.stringify(cfg));
+    toast(p.checked ? "Interdiction activée" : "Interdiction levée");
+  }
 });
 $("#fichierCaptures").addEventListener("change", e => {
   const fichiers = Array.from(e.target.files || []);
