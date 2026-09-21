@@ -1,6 +1,6 @@
 {
   "version": "1.11.0",
-  "maj": "2026-09-21T07:48:19.018Z",
+  "maj": "2026-09-21T07:54:06.513Z",
   "codeReglages": "4a3df07d0ab30d77d2e4c3e04a59b626f8f56dc03dd9f17a54d66b469db358f3",
   "apps": [
     {
@@ -376,7 +376,7 @@
       ],
       "maj": "2026-09-11T06:04:04Z",
       "cache": false,
-      "pasAujourdhui": false,
+      "pasAujourdhui": true,
       "particuliere": false
     },
     {
