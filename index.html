@@ -424,7 +424,7 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 
       <div class="grptitre">Code des réglages</div>
       <button class="gros-bouton sec" id="btnChangerCode">Changer le code</button>
-      <div class="souslib">Demandé à chaque ouverture des réglages, sur ce navigateur uniquement.
+      <div class="souslib">Le même code vaut sur tous vos appareils : le changer ici le change partout.
         C'est une protection contre les fausses manœuvres, pas un coffre-fort.</div>
 
       <div class="grptitre">Remise à zéro</div>
@@ -511,9 +511,10 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.9.0";
+const VERSION = "1.10.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.10.0", d:"21 septembre 2026", c:"Le code des réglages est désormais commun à tous les appareils : il est rangé dans apps.json (sous forme d'empreinte) et relu à chaque démarrage. Un code défini sur un appareil est aussitôt demandé sur tous les autres, sans avoir à le recréer ; le changer ou l'effacer sur l'un le change partout. Un code créé avec la version précédente est partagé automatiquement au premier lancement de l'appareil où il a été défini." },
   { n:"1.9.0", d:"21 septembre 2026", c:"Les réglages sont protégés par un code à 4 chiffres, saisi sur un clavier façon écran de verrouillage d'iPhone (ou au clavier de l'ordinateur). À la première ouverture, on choisit le code et on le confirme ; il est ensuite demandé à chaque entrée dans l'onglet Réglages. Après 5 erreurs, 30 secondes d'attente. « Code oublié ? » l'efface contre le jeton GitHub enregistré sur ce navigateur. Bouton « Changer le code » dans les réglages. Code propre à chaque navigateur, conservé sous forme d'empreinte et jamais en clair." },
   { n:"1.8.1", d:"21 septembre 2026", c:"Les deux interdictions sur les captures (ajout et suppression) sont désormais cochées par défaut. Elles s'appliquent une fois à chaque navigateur, y compris ceux déjà réglés ; on peut ensuite les décocher, et ce choix est conservé." },
   { n:"1.8.0", d:"21 septembre 2026", c:"Nouvelle rubrique « Captures d'écran » dans les réglages, avec deux cases indépendantes : interdire l'ajout de captures (le cadre « ＋ Ajouter » disparaît des fiches) et interdire leur suppression (les croix disparaissent). Réglage propre à chaque navigateur, pris en compte immédiatement, sans rien modifier dans le dépôt." },
@@ -688,6 +689,10 @@ let appCourante = null;
    et quand ont eu lieu le dernier envoi et la dernière lecture. */
 let etat = { modifs:0, envoi:null, lecture:null, dernierEchec:null };
 
+/* Code des réglages (empreinte), commun à tous les appareils via apps.json */
+let codeReglages = null;
+let codeAMigrer = false;
+
 const $  = (s,r)=>(r||document).querySelector(s);
 const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
 const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c =>
@@ -724,7 +729,8 @@ function enregistrerLocal(modif){
   if (modif) etat.modifs++;
   try{
     localStorage.setItem(CLE_CACHE, JSON.stringify({
-      version:VERSION, maj:new Date().toISOString(), apps:apps, etat:etat }));
+      version:VERSION, maj:new Date().toISOString(), apps:apps, etat:etat,
+      codeReglages:codeReglages }));
   }catch(e){ log("⚠️ Mémoire locale saturée : " + e.message); }
   majBandeau();
 }
@@ -820,6 +826,24 @@ async function chargerCatalogue(silencieux){
   try{ local = JSON.parse(localStorage.getItem(CLE_CACHE) || "null"); }catch(e){}
   if (local && local.etat) etat = Object.assign(etat, local.etat);
 
+  // apps.json est toujours lu : il porte le code des réglages commun à tous
+  // les appareils, même quand le catalogue local est conservé.
+  let distant = null;
+  try{
+    const r = await fetch("apps.json?t=" + Date.now(), { cache:"no-store" });
+    if (r.ok) distant = await r.json();
+  }catch(e){ /* fichier absent ou réseau coupé */ }
+
+  if (distant && distant.codeReglages){
+    codeReglages = distant.codeReglages;                 // le dépôt fait foi
+  }else if (local && local.codeReglages){
+    codeReglages = local.codeReglages;                   // dernier connu, hors ligne
+  }else{
+    codeReglages = localStorage.getItem(CLE_CODE) || null;   // ancien code v1.9.0
+    codeAMigrer = !!(codeReglages && distant);           // à publier au démarrage
+  }
+  if (codeReglages) localStorage.setItem(CLE_CODE, codeReglages);
+
   // Des modifications attendent d'être envoyées : elles sont prioritaires,
   // sinon la lecture d'apps.json les effacerait sans prévenir.
   if (local && Array.isArray(local.apps) && local.apps.length && etat.modifs > 0){
@@ -830,20 +854,14 @@ async function chargerCatalogue(silencieux){
   }
 
   // Sinon, le dépôt fait foi
-  try{
-    const r = await fetch("apps.json?t=" + Date.now(), { cache:"no-store" });
-    if (r.ok){
-      const o = await r.json();
-      if (o && Array.isArray(o.apps) && o.apps.length){
-        apps = normaliser(o.apps);
-        etat.lecture = new Date().toISOString();
-        etat.modifs = 0; etat.dernierEchec = null;
-        enregistrerLocal(false);
-        if (!silencieux) log("Catalogue lu dans apps.json (" + apps.length + " applications).");
-        return;
-      }
-    }
-  }catch(e){ /* fichier absent : on continue */ }
+  if (distant && Array.isArray(distant.apps) && distant.apps.length){
+    apps = normaliser(distant.apps);
+    etat.lecture = new Date().toISOString();
+    etat.modifs = 0; etat.dernierEchec = null;
+    enregistrerLocal(false);
+    if (!silencieux) log("Catalogue lu dans apps.json (" + apps.length + " applications).");
+    return;
+  }
 
   if (local && Array.isArray(local.apps) && local.apps.length){
     apps = normaliser(local.apps);
@@ -1282,6 +1300,7 @@ async function envoyerCatalogue(auto){
     return false;
   }
   const contenu = { version:VERSION, maj:new Date().toISOString(),
+                    codeReglages: codeReglages || null,
                     apps: apps.map(a => ({ depot:a.depot, nom:a.nom, emoji:a.emoji, cat:a.cat,
                                            st:a.st, d:a.d, c:a.c, captures:a.captures||[], maj:a.maj||null,
                                            cache:!!a.cache, pasAujourdhui:!!a.pasAujourdhui,
@@ -1507,7 +1526,7 @@ async function touchePave(ch){
   await new Promise(r => setTimeout(r, 130));   // laisse voir le 4e point se remplir
 
   if (pav.mode === "saisir"){
-    if ((await empreinte(pav.saisie)) === localStorage.getItem(CLE_CODE)){
+    if ((await empreinte(pav.saisie)) === codeReglages){
       pav.echecs = 0;
       fermerPave(true);
       return;
@@ -1538,8 +1557,7 @@ async function touchePave(ch){
 
   if (pav.mode === "creer2"){
     if (pav.saisie === pav.premier){
-      localStorage.setItem(CLE_CODE, await empreinte(pav.saisie));
-      toast(pav.changement ? "Nouveau code enregistré" : "Code enregistré");
+      await definirCode(await empreinte(pav.saisie));
       fermerPave(true);
     }else{
       secouer();
@@ -1548,6 +1566,22 @@ async function touchePave(ch){
       majPave();
     }
   }
+}
+
+/* Enregistre le code ici et le publie dans apps.json pour tous les appareils */
+async function definirCode(h){
+  codeReglages = h;
+  localStorage.setItem(CLE_CODE, h);
+  enregistrerLocal(true);
+  if (!cfg.token){
+    toast("Code enregistré ici — il sera partagé dès qu'un jeton sera renseigné");
+    log("Code des réglages enregistré sur ce navigateur, en attente d'envoi (pas de jeton).");
+    return;
+  }
+  const ok = await envoyerCatalogue(true);
+  toast(ok ? "Code enregistré pour tous vos appareils"
+           : "Code enregistré ici — envoi à réessayer depuis les réglages");
+  if (ok) log("Code des réglages publié : il vaut désormais sur tous les appareils.");
 }
 
 /* Code oublié : effacé contre le jeton GitHub de ce navigateur, puis
@@ -1572,6 +1606,7 @@ function codeOublie(){
     + '</div>');
 }
 function recommencerCode(){
+  codeReglages = null;
   localStorage.removeItem(CLE_CODE);
   Object.assign(pav, { mode:"creer1", saisie:"", premier:"", echecs:0, bloqueJusqua:0,
                        changement:false, msg:"Ancien code effacé. Choisissez-en un nouveau." });
@@ -1582,7 +1617,7 @@ function recommencerCode(){
 async function allerOnglet(id){
   const courant = ($(".page.actif") || {}).id;
   if (id === "p-set" && courant !== "p-set"){
-    const ok = await ouvrirPave(localStorage.getItem(CLE_CODE) ? "saisir" : "creer1");
+    const ok = await ouvrirPave(codeReglages ? "saisir" : "creer1");
     if (!ok) return;
   }
   $$(".tab").forEach(x => x.classList.toggle("on", x.dataset.page === id));
@@ -1758,6 +1793,12 @@ function detecterMode(){
   await chargerCatalogue();
   rendre();
   majBandeau();
+  // Code créé en v1.9.0 sur ce seul navigateur : on le partage une fois pour toutes
+  if (codeAMigrer && cfg.token){
+    codeAMigrer = false;
+    log("Partage du code des réglages avec vos autres appareils…");
+    await envoyerCatalogue(true);
+  }
 })();
 </script>
 </body>
