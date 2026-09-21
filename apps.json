@@ -1,6 +1,6 @@
 {
-  "version": "1.11.0",
-  "maj": "2026-09-21T07:55:28.533Z",
+  "version": "1.15.0",
+  "maj": "2026-09-21T20:56:43.632Z",
   "codeReglages": "4a3df07d0ab30d77d2e4c3e04a59b626f8f56dc03dd9f17a54d66b469db358f3",
   "apps": [
     {
@@ -20,6 +20,7 @@
         "screens/Tourisme/3-1789908722895.jpg"
       ],
       "maj": "2026-09-19T10:07:14Z",
+      "majHtml": "2026-09-14T05:47:44Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -41,6 +42,7 @@
         "screens/test-app/3-1789907400618.jpg"
       ],
       "maj": "2026-09-18T11:47:47Z",
+      "majHtml": "2026-09-05T07:57:51Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -60,6 +62,7 @@
         "screens/app-pente/1-1789920114192.jpg"
       ],
       "maj": "2026-09-02T21:39:22Z",
+      "majHtml": "2026-09-02T21:39:18Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -76,10 +79,10 @@
         "#d4527a"
       ],
       "captures": [
-        "screens/vins/1-1789909509081.jpg",
         "screens/vins/2-1789909511669.jpg"
       ],
       "maj": "2026-09-20T13:03:44Z",
+      "majHtml": "2026-09-14T13:45:57Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -99,6 +102,7 @@
         "screens/restaurants/1-1789920193670.jpg"
       ],
       "maj": "2026-09-16T18:17:45Z",
+      "majHtml": "2026-09-14T21:49:15Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -118,6 +122,7 @@
         "screens/bibliotheque/1-1789972972941.jpg"
       ],
       "maj": "2026-09-20T12:46:31Z",
+      "majHtml": "2026-09-20T09:09:12Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -138,6 +143,7 @@
         "screens/prix/2-1789908820429.jpg"
       ],
       "maj": "2026-09-20T09:49:28Z",
+      "majHtml": "2026-09-14T11:43:57Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -157,6 +163,7 @@
         "screens/anniversaires/1-1789972850000.jpg"
       ],
       "maj": "2026-08-28T22:05:21Z",
+      "majHtml": "2026-08-28T22:05:20Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -176,6 +183,7 @@
         "screens/genealogie/1-1789973487722.jpg"
       ],
       "maj": "2026-08-26T09:06:00Z",
+      "majHtml": "2026-08-26T09:02:54Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -195,6 +203,7 @@
         "screens/checkwordsvn/1-1789920257502.jpg"
       ],
       "maj": "2026-09-13T14:21:09Z",
+      "majHtml": "2026-09-13T14:21:09Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -215,6 +224,7 @@
         "screens/mon-projet/2-1789920381733.jpg"
       ],
       "maj": "2026-09-18T11:51:49Z",
+      "majHtml": "2026-09-13T17:14:03Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -232,6 +242,7 @@
       ],
       "captures": [],
       "maj": "2026-02-01T18:16:36Z",
+      "majHtml": "2026-02-01T18:16:36Z",
       "cache": true,
       "pasAujourdhui": false,
       "particuliere": false
@@ -249,6 +260,7 @@
       ],
       "captures": [],
       "maj": "2026-08-12T15:32:43Z",
+      "majHtml": "2026-08-12T15:32:43Z",
       "cache": true,
       "pasAujourdhui": false,
       "particuliere": false
@@ -266,6 +278,7 @@
       ],
       "captures": [],
       "maj": "2026-09-19T19:35:42Z",
+      "majHtml": "2026-04-25T07:29:00Z",
       "cache": true,
       "pasAujourdhui": false,
       "particuliere": false
@@ -285,6 +298,7 @@
         "screens/deployer/1-1789973037187.jpg"
       ],
       "maj": "2026-09-20T10:11:36Z",
+      "majHtml": "2026-09-20T20:50:26Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": false
@@ -302,6 +316,7 @@
       ],
       "captures": [],
       "maj": "2026-09-03T09:49:46Z",
+      "majHtml": "2026-09-03T09:49:46Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": true
@@ -319,6 +334,7 @@
       ],
       "captures": [],
       "maj": "2026-09-14T21:47:34Z",
+      "majHtml": "2026-09-14T21:47:34Z",
       "cache": true,
       "pasAujourdhui": true,
       "particuliere": true
@@ -336,6 +352,7 @@
       ],
       "captures": [],
       "maj": "2026-09-17T08:54:16Z",
+      "majHtml": "2026-09-12T19:55:17Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": true
@@ -355,6 +372,7 @@
         "screens/boxinternet/1-1789972905492.jpg"
       ],
       "maj": "2026-09-20T14:35:43Z",
+      "majHtml": "2026-09-13T09:01:55Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": false
@@ -375,6 +393,7 @@
         "screens/cameras/2-1789972509231.jpg"
       ],
       "maj": "2026-09-11T06:04:04Z",
+      "majHtml": "2026-09-11T06:03:22Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": false
@@ -392,6 +411,7 @@
       ],
       "captures": [],
       "maj": "2026-09-19T17:34:50Z",
+      "majHtml": "2026-09-19T17:34:50Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": true
@@ -411,6 +431,7 @@
         "screens/geminiPhoto/1-1789909939068.jpg"
       ],
       "maj": "2026-09-12T12:07:38Z",
+      "majHtml": "2026-09-12T10:38:48Z",
       "cache": false,
       "pasAujourdhui": true,
       "particuliere": true
@@ -430,6 +451,7 @@
         "screens/Audio/1-1789974030134.jpg"
       ],
       "maj": "2026-07-29T22:33:16Z",
+      "majHtml": "2026-07-29T22:33:16Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -449,6 +471,7 @@
         "screens/vignettes/1-1789974241530.jpg"
       ],
       "maj": "2026-09-11T19:09:45Z",
+      "majHtml": "2026-07-31T19:55:13Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -466,6 +489,7 @@
       ],
       "captures": [],
       "maj": "2026-09-12T06:20:29Z",
+      "majHtml": "2026-09-12T06:20:29Z",
       "cache": true,
       "pasAujourdhui": false,
       "particuliere": false
@@ -485,6 +509,7 @@
         "screens/niveau/1-1789974306006.jpg"
       ],
       "maj": "2026-08-25T20:54:06Z",
+      "majHtml": "2026-08-25T20:54:06Z",
       "cache": false,
       "pasAujourdhui": false,
       "particuliere": false
@@ -502,6 +527,7 @@
       ],
       "captures": [],
       "maj": "2026-07-31T15:57:35Z",
+      "majHtml": "2026-07-31T15:57:35Z",
       "cache": true,
       "pasAujourdhui": true,
       "particuliere": true
@@ -519,6 +545,7 @@
       ],
       "captures": [],
       "maj": "2026-09-20T15:24:38Z",
+      "majHtml": "2026-09-21T20:48:04Z",
       "cache": true,
       "pasAujourdhui": true,
       "particuliere": true
@@ -536,6 +563,7 @@
       ],
       "captures": [],
       "maj": "2026-07-25T20:25:16Z",
+      "majHtml": "2026-07-21T21:29:17Z",
       "cache": true,
       "pasAujourdhui": false,
       "particuliere": false
@@ -553,6 +581,7 @@
       ],
       "captures": [],
       "maj": "2026-08-10T08:07:15Z",
+      "majHtml": "2026-08-10T08:07:15Z",
       "cache": true,
       "pasAujourdhui": true,
       "particuliere": true
