@@ -237,6 +237,16 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
 .masquee{color:#ff9500;font-weight:600}
 .releve{font-size:13px;color:var(--texte2);padding:0 20px 9px;margin-top:-4px}
 
+/* Compte rendu du test d'accès à GitHub */
+.diag{margin:-8px 16px 20px;background:var(--carte);border-radius:14px;padding:12px 14px;
+      box-shadow:var(--ombre);font-size:14px;line-height:1.45}
+.diag .verdict{font-weight:600;font-size:15.5px;margin-bottom:8px}
+.diag .verdict.ok{color:#28a745}.diag .verdict.ko{color:#ff3b30}.diag .verdict.att{color:#e08a00}
+@media (prefers-color-scheme: dark){.diag .verdict.ok{color:#4cd964}.diag .verdict.att{color:#ffb340}}
+.diag .l{display:flex;gap:9px;padding:5px 0;border-top:.5px solid var(--sep)}
+.diag .l .p{flex:none;width:20px;text-align:center}
+.diag .l small{display:block;color:var(--texte2);font-size:12.5px;margin-top:2px}
+
 /* ---------- Lecteur : application ouverte dans cette fenêtre ---------- */
 .lecteur{position:fixed;inset:0;z-index:45;background:var(--fond);display:none;flex-direction:column}
 .lecteur.ouvert{display:flex;animation:monte .28s cubic-bezier(.32,.72,0,1)}
@@ -466,6 +476,12 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
       </div>
       <button class="gros-bouton sec" id="btnEnrCfg">Enregistrer ces identifiants</button>
       <div class="souslib">Ils restent sur ce navigateur et ne sont jamais envoyés dans le dépôt.</div>
+      <button class="gros-bouton sec" id="btnTesterAcces">Tester l'accès à GitHub</button>
+      <div class="souslib">Vérifie le jeton saisi ci-dessus, même avant de l'enregistrer : validité, compte,
+        accès au dépôt du catalogue et droit d'y écrire.</div>
+      <div class="diag" id="diagAcces" hidden></div>
+      <button class="gros-bouton sec" id="btnCopierJeton">Copier le jeton</button>
+      <div class="souslib">Place le jeton dans le presse-papier, pour le coller dans une autre de vos applications.</div>
       <button class="gros-bouton sec" id="btnJetons">Chercher un jeton sur cet appareil</button>
       <div class="souslib">Retrouve un jeton GitHub déjà enregistré par vos autres applications, pour éviter de le retaper.</div>
 
@@ -578,9 +594,10 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.14.0";
+const VERSION = "1.15.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.15.0", d:"21 septembre 2026", c:"Deux boutons dans « Accès GitHub ». « Tester l'accès à GitHub » vérifie le jeton saisi, même avant de l'enregistrer, et détaille chaque point : jeton reconnu, compte correspondant, dépôt du catalogue trouvé, droit d'y écrire, date d'expiration du jeton quand GitHub la donne, quota d'appels restant — avec la marche à suivre en cas de problème. « Copier le jeton » le place dans le presse-papier pour le coller dans une autre application, avec un repli qui fonctionne aussi sur iPhone." },
   { n:"1.14.0", d:"21 septembre 2026", c:"« Récemment mises à jour » repose désormais sur la date du dernier commit qui modifie réellement index.html de chaque application — les envois de données ne comptent plus. Ces dates sont relevées automatiquement en arrière-plan au démarrage (au plus toutes les 6 h avec jeton, 24 h sans), avec décompte de progression, et affichées sous le nom de chaque app ainsi que dans sa fiche. Bouton « Relever les dates maintenant » dans les réglages. La rotation d'Aujourd'hui change à minuit heure de Paris et ne montre jamais deux fois la même application." },
   { n:"1.13.0", d:"21 septembre 2026", c:"Les applications s'ouvrent désormais à l'intérieur de Mes Apps, en plein écran, au lieu de partir dans un navigateur externe. Une barre en haut permet de revenir (« ‹ Mes Apps ») ou, en secours, d'ouvrir l'application dans le navigateur (↗). Le retour arrête réellement l'application ouverte (GPS, écran maintenu allumé). Le GPS, l'appareil photo, le micro, le presse-papier et les capteurs de mouvement sont autorisés dans le cadre." },
   { n:"1.12.0", d:"21 septembre 2026", c:"Nouvelle case « Tout autoriser pendant cette session » dans les réglages, décochée par défaut : elle fait réapparaître les applications masquées et lève les interdictions d'ajout et de suppression de captures, jusqu'à la fermeture de l'onglet ou de l'application. Rien n'est enregistré dans le dépôt : les autres appareils et navigateurs ne sont pas concernés. Un bandeau orange au-dessus des onglets signale le forçage et permet de l'arrêter sans code ; les applications masquées sont repérées par la mention « masquée »." },
@@ -1901,6 +1918,171 @@ async function allerOnglet(id){
 }
 
 /* ================================================================
+   10 ter. TEST DE L'ACCÈS À GITHUB ET COPIE DU JETON
+   Le test porte sur ce qui est saisi dans les champs, enregistré ou non.
+   ================================================================ */
+async function testerAcces(){
+  const zone = $("#diagAcces"), bouton = $("#btnTesterAcces");
+  const jeton = $("#cfgToken").value.trim();
+  const user  = $("#cfgUser").value.trim()  || PROPRIO_DEFAUT;
+  const depot = $("#cfgDepot").value.trim() || "appstore";
+  const lignes = [];
+  let verdict = null;
+
+  const afficher = (enCours) => {
+    zone.hidden = false;
+    zone.innerHTML =
+        (verdict ? '<div class="verdict ' + verdict[0] + '">' + esc(verdict[1]) + '</div>' : '')
+      + lignes.map(l => '<div class="l"><span class="p">' + l[0] + '</span><span>' + esc(l[1])
+                   + (l[2] ? '<small>' + esc(l[2]) + '</small>' : '') + '</span></div>').join("")
+      + (enCours ? '<div class="l"><span class="p">⏳</span><span>' + esc(enCours) + '</span></div>' : '');
+  };
+  const fin = (classe, texte) => { verdict = [classe, texte]; afficher(); bouton.disabled = false; };
+
+  bouton.disabled = true;
+  if (!jeton){
+    lignes.push(["❌", "Aucun jeton saisi", "Collez votre jeton dans le champ « Jeton (PAT) » ci-dessus."]);
+    return fin("ko", "Test impossible");
+  }
+
+  // 1. Le jeton est-il reconnu, et à quel compte appartient-il ?
+  afficher("Interrogation de GitHub…");
+  const h = { "Accept":"application/vnd.github+json", "Authorization":"Bearer " + jeton };
+  let r;
+  try{ r = await fetch("https://api.github.com/user", { headers:h }); }
+  catch(e){
+    lignes.push(["❌", "GitHub injoignable", "Vérifiez la connexion réseau, puis relancez le test."]);
+    return fin("ko", "Accès impossible");
+  }
+  if (r.status === 401){
+    lignes.push(["❌", "Jeton refusé par GitHub",
+      "Il est invalide, révoqué ou expiré. Créez-en un nouveau sur github.com → Settings → Developer settings → Personal access tokens, puis collez-le ici."]);
+    return fin("ko", "Accès refusé");
+  }
+  if (!r.ok){
+    lignes.push(["❌", "Réponse inattendue de GitHub (erreur " + r.status + ")", "Réessayez dans quelques minutes."]);
+    return fin("ko", "Accès incertain");
+  }
+  const compte = await r.json();
+  lignes.push(["✅", "Jeton reconnu : compte " + compte.login]);
+
+  let attention = false;
+  const expire = r.headers.get("github-authentication-token-expiration");
+  if (expire){
+    const jours = Math.floor((new Date(expire) - Date.now()) / 864e5);
+    if (jours < 14) attention = true;
+    lignes.push([jours < 14 ? "⚠️" : "ℹ️",
+      "Expire le " + new Date(expire).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})
+      + (jours >= 0 ? " (dans " + jours + " jour" + (jours > 1 ? "s" : "") + ")" : ""),
+      jours < 14 ? "Pensez à le renouveler bientôt, puis à le recopier dans vos autres applications." : ""]);
+  }else{
+    lignes.push(["ℹ️", "Pas de date d'expiration communiquée par GitHub"]);
+  }
+
+  const portees = r.headers.get("x-oauth-scopes");     // présent pour les jetons classiques seulement
+  const fin_grain = portees === null;
+
+  if (compte.login.toLowerCase() !== user.toLowerCase()){
+    attention = true;
+    lignes.push(["⚠️", "Ce jeton appartient à « " + compte.login + " », pas à « " + user + " »",
+      "Corrigez le champ Utilisateur ou utilisez le jeton du bon compte."]);
+  }
+
+  // 2. Le dépôt du catalogue est-il accessible, et peut-on y écrire ?
+  afficher("Vérification du dépôt " + user + "/" + depot + "…");
+  let rd;
+  try{ rd = await fetch("https://api.github.com/repos/" + user + "/" + depot, { headers:h }); }
+  catch(e){
+    lignes.push(["❌", "GitHub injoignable pendant la vérification du dépôt"]);
+    return fin("ko", "Accès incomplet");
+  }
+  if (rd.status === 404){
+    lignes.push(["❌", "Dépôt « " + user + "/" + depot + " » introuvable",
+      "Vérifiez l'orthographe des champs Utilisateur et Dépôt catalogue. S'il est privé, le jeton doit y avoir accès."]);
+    return fin("ko", "Dépôt inaccessible");
+  }
+  if (!rd.ok){
+    lignes.push(["❌", "Dépôt inaccessible (erreur " + rd.status + ")"]);
+    return fin("ko", "Dépôt inaccessible");
+  }
+  const infoDepot = await rd.json();
+  lignes.push(["✅", "Dépôt « " + infoDepot.full_name + " » trouvé"
+    + (infoDepot.private ? " (privé)" : "") + ", branche par défaut « " + infoDepot.default_branch + " »"]);
+
+  const p = infoDepot.permissions || {};
+  if (!(p.push || p.admin || p.maintain)){
+    lignes.push(["❌", "Écriture refusée dans ce dépôt",
+      "Les captures et le catalogue ne pourront pas être enregistrés. Utilisez un jeton du propriétaire du dépôt."]);
+    return fin("ko", "Lecture seule");
+  }
+  if (!fin_grain && !/\brepo\b|\bpublic_repo\b/.test(portees)){
+    lignes.push(["❌", "Jeton classique sans la portée « repo »",
+      "Portées actuelles : " + (portees || "aucune") + ". Modifiez le jeton sur GitHub pour cocher « repo »."]);
+    return fin("ko", "Droits insuffisants");
+  }
+  lignes.push(["✅", "Droit d'écriture dans le dépôt",
+    fin_grain ? "Jeton à accès fin : GitHub ne permet pas de contrôler sa permission « Contents » sans écrire. Le premier envoi le confirmera."
+              : "Portées du jeton : " + portees]);
+
+  if (($("#cfgBranche").value.trim() || "main") !== infoDepot.default_branch){
+    attention = true;
+    lignes.push(["⚠️", "Branche réglée sur « " + ($("#cfgBranche").value.trim() || "main")
+      + " » alors que le dépôt utilise « " + infoDepot.default_branch + " »",
+      "Corrigez le champ Branche pour éviter des envois au mauvais endroit."]);
+  }
+
+  // 3. Quota d'appels
+  const reste = rd.headers.get("x-ratelimit-remaining"), limite = rd.headers.get("x-ratelimit-limit");
+  if (reste && limite) lignes.push(["ℹ️", "Quota : " + Number(reste).toLocaleString("fr-FR") + " appels restants sur "
+                                      + Number(limite).toLocaleString("fr-FR") + " pour l'heure en cours"]);
+
+  if (jeton !== cfg.token){
+    attention = true;
+    lignes.push(["⚠️", "Ce jeton n'est pas encore enregistré",
+      "Touchez « Enregistrer ces identifiants » pour que l'application l'utilise."]);
+  }
+  log("Test d'accès GitHub : " + (attention ? "opérationnel, avec remarques." : "opérationnel."));
+  fin(attention ? "att" : "ok", attention ? "✓ Accès opérationnel, avec des remarques" : "✓ Accès à GitHub opérationnel");
+}
+
+/* Copie robuste. Sur iPhone, navigator.clipboard peut annoncer un succès sans
+   rien copier ; on tente donc d'abord la sélection + execCommand, synchrone,
+   tant que le geste de l'utilisateur est encore valable, puis l'API moderne. */
+async function copierTexte(texte){
+  const z = document.createElement("textarea");
+  z.value = texte;
+  z.setAttribute("readonly", "");
+  z.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px";
+  document.body.appendChild(z);
+  z.focus(); z.select(); z.setSelectionRange(0, texte.length);
+  let ok = false;
+  try{ ok = document.execCommand("copy"); }catch(e){}
+  z.remove();
+  if (ok) return true;
+  try{
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(texte);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+async function copierJeton(){
+  const jeton = $("#cfgToken").value.trim();
+  const b = $("#btnCopierJeton");
+  if (!jeton){ toast("Aucun jeton à copier"); return; }
+  const ok = await copierTexte(jeton);
+  if (ok){
+    b.textContent = "✓ Jeton copié";
+    setTimeout(() => { b.textContent = "Copier le jeton"; }, 2000);
+    log("Jeton copié dans le presse-papier.");
+  }else{
+    toast("Copie impossible : sélectionnez le champ Jeton et copiez-le à la main");
+  }
+}
+
+/* ================================================================
    11. ÉVÉNEMENTS
    ================================================================ */
 document.addEventListener("click", ev => {
@@ -1915,6 +2097,8 @@ document.addEventListener("click", ev => {
   if (t.closest("#modAnnuler")){ fermerModale(); return; }
   if (t.closest("#btnChangerCode")){ ouvrirPave("creer1", true); return; }
 
+  if (t.closest("#btnTesterAcces")){ testerAcces(); return; }
+  if (t.closest("#btnCopierJeton")){ copierJeton(); return; }
   if (t.closest("#btnDates")){ releverDates(true); return; }
   if (t.closest("#btnLecteurRetour")){ fermerLecteur(); return; }
   if (t.closest("#btnLecteurExterne")){ ouvrirDansNavigateur(); return; }
