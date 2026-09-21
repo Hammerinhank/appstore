@@ -511,9 +511,10 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.10.0";
+const VERSION = "1.11.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.11.0", d:"21 septembre 2026", c:"Faille corrigée : « Code oublié » permettait de définir un nouveau code sans preuve sur un appareil sans jeton. Il exige désormais un jeton GitHub que GitHub confirme, en direct, comme autorisé à écrire dans le dépôt du catalogue — le jeton déjà enregistré sur l'appareil n'est plus accepté. Second trou fermé : un appareil qui n'a pas pu lire le dépôt (hors connexion) ne propose plus de créer un code, et garde les réglages fermés." },
   { n:"1.10.0", d:"21 septembre 2026", c:"Le code des réglages est désormais commun à tous les appareils : il est rangé dans apps.json (sous forme d'empreinte) et relu à chaque démarrage. Un code défini sur un appareil est aussitôt demandé sur tous les autres, sans avoir à le recréer ; le changer ou l'effacer sur l'un le change partout. Un code créé avec la version précédente est partagé automatiquement au premier lancement de l'appareil où il a été défini." },
   { n:"1.9.0", d:"21 septembre 2026", c:"Les réglages sont protégés par un code à 4 chiffres, saisi sur un clavier façon écran de verrouillage d'iPhone (ou au clavier de l'ordinateur). À la première ouverture, on choisit le code et on le confirme ; il est ensuite demandé à chaque entrée dans l'onglet Réglages. Après 5 erreurs, 30 secondes d'attente. « Code oublié ? » l'efface contre le jeton GitHub enregistré sur ce navigateur. Bouton « Changer le code » dans les réglages. Code propre à chaque navigateur, conservé sous forme d'empreinte et jamais en clair." },
   { n:"1.8.1", d:"21 septembre 2026", c:"Les deux interdictions sur les captures (ajout et suppression) sont désormais cochées par défaut. Elles s'appliquent une fois à chaque navigateur, y compris ceux déjà réglés ; on peut ensuite les décocher, et ce choix est conservé." },
@@ -692,6 +693,7 @@ let etat = { modifs:0, envoi:null, lecture:null, dernierEchec:null };
 /* Code des réglages (empreinte), commun à tous les appareils via apps.json */
 let codeReglages = null;
 let codeAMigrer = false;
+let depotLu = false;        // apps.json a-t-il pu être lu depuis le dernier démarrage ?
 
 const $  = (s,r)=>(r||document).querySelector(s);
 const $$ = (s,r)=>Array.from((r||document).querySelectorAll(s));
@@ -833,6 +835,7 @@ async function chargerCatalogue(silencieux){
     const r = await fetch("apps.json?t=" + Date.now(), { cache:"no-store" });
     if (r.ok) distant = await r.json();
   }catch(e){ /* fichier absent ou réseau coupé */ }
+  depotLu = !!distant;
 
   if (distant && distant.codeReglages){
     codeReglages = distant.codeReglages;                 // le dépôt fait foi
@@ -1584,26 +1587,60 @@ async function definirCode(h){
   if (ok) log("Code des réglages publié : il vaut désormais sur tous les appareils.");
 }
 
-/* Code oublié : effacé contre le jeton GitHub de ce navigateur, puis
-   le clavier enchaîne directement sur le choix d'un nouveau code. */
+/* Code oublié : la seule preuve acceptée est un jeton GitHub que GitHub lui-même
+   reconnaît comme autorisé à écrire dans le dépôt du catalogue. Le jeton déjà
+   enregistré sur l'appareil ne compte pas : n'importe qui tenant l'appareil
+   pourrait s'en servir. */
 function codeOublie(){
-  if (!cfg.token){
-    demander("Code oublié",
-      "Aucun jeton GitHub n'est enregistré sur ce navigateur : le code peut être effacé sans autre vérification. "
-      + "Vous en choisirez aussitôt un nouveau.", "Effacer le code", true).then(ok => {
-        if (ok) recommencerCode();
-      });
-    return;
-  }
   modale("Code oublié",
-      '<p class="q">Pour effacer le code, collez ci-dessous le jeton GitHub enregistré dans les réglages de ce navigateur.</p>'
+      '<p class="q">Pour définir un nouveau code, collez un jeton GitHub autorisé à écrire dans le dépôt '
+    + esc(cfg.user) + '/' + esc(cfg.depot) + '. GitHub vérifiera qu\'il est valide.</p>'
     + '<div class="grp" style="margin:0 0 16px"><div class="champ">'
     +   '<input id="razJeton" type="password" placeholder="ghp_… ou github_pat_…" autocomplete="off" style="width:100%">'
     + '</div></div>'
+    + '<p class="q" id="razMsg" style="font-size:14px;color:var(--texte2);min-height:20px"></p>'
     + '<div class="actionsmod">'
-    +   '<button class="bt-pri dan" id="btnRaz">Effacer le code</button>'
+    +   '<button class="bt-pri dan" id="btnRaz">Vérifier et changer le code</button>'
     +   '<button class="bt-sec" id="modAnnuler">Annuler</button>'
     + '</div>');
+}
+
+/* Interroge GitHub : le jeton est-il valide, et donne-t-il le droit d'écrire
+   dans le dépôt du catalogue ? Renvoie { ok, raison }. */
+async function verifierJeton(jeton){
+  try{
+    const r = await fetch("https://api.github.com/repos/" + cfg.user + "/" + cfg.depot, {
+      headers:{ "Accept":"application/vnd.github+json", "Authorization":"Bearer " + jeton } });
+    if (r.status === 401) return { ok:false, raison:"GitHub ne reconnaît pas ce jeton (invalide ou expiré)." };
+    if (!r.ok)            return { ok:false, raison:"Dépôt " + cfg.user + "/" + cfg.depot + " inaccessible avec ce jeton (erreur " + r.status + ")." };
+    const depot = await r.json();
+    const p = depot.permissions || {};
+    if (p.push || p.admin || p.maintain) return { ok:true };
+    return { ok:false, raison:"Ce jeton est valide mais n'a pas le droit d'écrire dans ce dépôt." };
+  }catch(e){
+    return { ok:false, raison:"Impossible de joindre GitHub : vérifiez la connexion." };
+  }
+}
+
+async function validerCodeOublie(){
+  const jeton = (($("#razJeton") || {}).value || "").trim();
+  const msg = $("#razMsg"), bouton = $("#btnRaz");
+  if (!jeton){ msg.textContent = "Collez d'abord un jeton."; return; }
+  bouton.disabled = true; msg.style.color = "var(--texte2)"; msg.textContent = "Vérification auprès de GitHub…";
+  const v = await verifierJeton(jeton);
+  bouton.disabled = false;
+  if (!v.ok){
+    msg.style.color = "#ff3b30"; msg.textContent = v.raison;
+    log("⚠️ Code oublié refusé : " + v.raison);
+    return;
+  }
+  // Jeton du propriétaire : on le garde sur cet appareil, il servira à publier le nouveau code
+  cfg.token = jeton;
+  localStorage.setItem(CLE_CFG, JSON.stringify(cfg));
+  $("#cfgToken").value = jeton;
+  log("✅ Jeton vérifié par GitHub : définition d'un nouveau code autorisée.");
+  fermerModale();
+  recommencerCode();
 }
 function recommencerCode(){
   codeReglages = null;
@@ -1617,6 +1654,19 @@ function recommencerCode(){
 async function allerOnglet(id){
   const courant = ($(".page.actif") || {}).id;
   if (id === "p-set" && courant !== "p-set"){
+    // Aucun code connu : on ne propose d'en créer un que si le dépôt confirme
+    // qu'il n'en existe pas. Hors connexion, on ne peut pas le savoir.
+    if (!codeReglages && !depotLu){
+      await chargerCatalogue(true);
+      rendre();
+      if (!codeReglages && !depotLu){
+        demander("Connexion nécessaire",
+          "Le code des réglages est conservé dans votre dépôt GitHub, qui ne répond pas pour l'instant. "
+          + "Les réglages resteront fermés tant qu'il n'aura pas pu être vérifié. Réessayez une fois connecté.",
+          "Compris", false);
+        return;
+      }
+    }
     const ok = await ouvrirPave(codeReglages ? "saisir" : "creer1");
     if (!ok) return;
   }
@@ -1635,16 +1685,7 @@ document.addEventListener("click", ev => {
   if (touche){ touchePave(touche.dataset.touche); return; }
   if (t.closest("#paveAnnuler")){ fermerPave(false); return; }
   if (t.closest("#paveOublie")){ codeOublie(); return; }
-  if (t.closest("#btnRaz")){
-    const saisi = ($("#razJeton") || {}).value || "";
-    if (saisi.trim() && saisi.trim() === cfg.token){
-      fermerModale();
-      recommencerCode();
-    }else{
-      toast("Ce n'est pas le jeton enregistré sur ce navigateur");
-    }
-    return;
-  }
+  if (t.closest("#btnRaz")){ validerCodeOublie(); return; }
   if (t.closest("#modAnnuler")){ fermerModale(); return; }
   if (t.closest("#btnChangerCode")){ ouvrirPave("creer1", true); return; }
 
