@@ -1,6 +1,6 @@
 {
-  "version": "1.3.0",
-  "maj": "2026-09-20T16:07:36.106Z",
+  "version": "1.7.0",
+  "maj": "2026-09-21T06:35:11.222Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -359,7 +359,10 @@
         "#3b3b8f",
         "#9b9bf5"
       ],
-      "captures": [],
+      "captures": [
+        "screens/cameras/1-1789972506887.jpg",
+        "screens/cameras/2-1789972509231.jpg"
+      ],
       "maj": "2026-09-11T06:04:04Z",
       "cache": false,
       "pasAujourdhui": false,
