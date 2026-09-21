@@ -1,6 +1,6 @@
 {
   "version": "1.7.0",
-  "maj": "2026-09-21T06:35:11.222Z",
+  "maj": "2026-09-21T06:40:52.080Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -150,7 +150,9 @@
         "#b02a6b",
         "#ff9ecb"
       ],
-      "captures": [],
+      "captures": [
+        "screens/anniversaires/1-1789972850000.jpg"
+      ],
       "maj": "2026-08-28T22:05:21Z",
       "cache": false,
       "pasAujourdhui": false,
