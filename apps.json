@@ -1,6 +1,7 @@
 {
-  "version": "1.7.0",
-  "maj": "2026-09-21T07:08:25.759Z",
+  "version": "1.10.0",
+  "maj": "2026-09-21T07:30:02.901Z",
+  "codeReglages": "4a3df07d0ab30d77d2e4c3e04a59b626f8f56dc03dd9f17a54d66b469db358f3",
   "apps": [
     {
       "depot": "Tourisme",
