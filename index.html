@@ -236,6 +236,22 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
                  padding:6px 12px;border-radius:100px;flex:none}
 .masquee{color:#ff9500;font-weight:600}
 
+/* ---------- Lecteur : application ouverte dans cette fenêtre ---------- */
+.lecteur{position:fixed;inset:0;z-index:45;background:var(--fond);display:none;flex-direction:column}
+.lecteur.ouvert{display:flex;animation:monte .28s cubic-bezier(.32,.72,0,1)}
+.lecteur-barre{flex:none;display:flex;align-items:center;gap:10px;
+               padding:calc(var(--haut) + 6px) 12px 8px;background:var(--barre);
+               backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+               border-bottom:.5px solid var(--sep)}
+.lecteur-retour{color:var(--bleu);font-size:17px;flex:none;width:104px;text-align:left;padding:4px 0}
+.lecteur-titre{flex:1;text-align:center;font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lecteur-ext{flex:none;width:104px;display:flex;justify-content:flex-end}
+.lecteur-ext span{width:30px;height:30px;border-radius:50%;background:var(--pilule);
+                  color:var(--bleu);font-weight:700;display:grid;place-items:center;font-size:15px}
+.lecteur-zone{flex:1;position:relative;overflow:hidden}
+.lecteur-zone iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block;background:var(--fond)}
+.lecteur-charge{position:absolute;inset:0;display:grid;place-items:center;color:var(--texte2);font-size:15px}
+
 /* ---------- Barre d'onglets ---------- */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
       background:var(--barre);backdrop-filter:saturate(180%) blur(20px);
@@ -497,6 +513,20 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
   <div id="ficheCorps"></div>
 </div>
 
+<!-- ============ LECTEUR : l'application ouverte dans cette fenêtre ============ -->
+<div class="lecteur" id="lecteur" role="dialog" aria-modal="true" aria-labelledby="lecteurTitre">
+  <div class="lecteur-barre">
+    <button class="lecteur-retour" id="btnLecteurRetour">‹ Mes Apps</button>
+    <span class="lecteur-titre" id="lecteurTitre"></span>
+    <button class="lecteur-ext" id="btnLecteurExterne" aria-label="Ouvrir dans le navigateur" title="Ouvrir dans le navigateur"><span>↗</span></button>
+  </div>
+  <div class="lecteur-zone">
+    <div class="lecteur-charge" id="lecteurCharge">Chargement…</div>
+    <iframe id="lecteurCadre" title="Application"
+      allow="geolocation; camera; microphone; clipboard-read; clipboard-write; screen-wake-lock; accelerometer; gyroscope; magnetometer; fullscreen"></iframe>
+  </div>
+</div>
+
 <!-- ============ CLAVIER À CODE DES RÉGLAGES ============ -->
 <div class="pave" id="pave" role="dialog" aria-modal="true" aria-labelledby="paveTitre">
   <div class="pave-haut">
@@ -543,9 +573,10 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.12.0";
+const VERSION = "1.13.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.13.0", d:"21 septembre 2026", c:"Les applications s'ouvrent désormais à l'intérieur de Mes Apps, en plein écran, au lieu de partir dans un navigateur externe. Une barre en haut permet de revenir (« ‹ Mes Apps ») ou, en secours, d'ouvrir l'application dans le navigateur (↗). Le retour arrête réellement l'application ouverte (GPS, écran maintenu allumé). Le GPS, l'appareil photo, le micro, le presse-papier et les capteurs de mouvement sont autorisés dans le cadre." },
   { n:"1.12.0", d:"21 septembre 2026", c:"Nouvelle case « Tout autoriser pendant cette session » dans les réglages, décochée par défaut : elle fait réapparaître les applications masquées et lève les interdictions d'ajout et de suppression de captures, jusqu'à la fermeture de l'onglet ou de l'application. Rien n'est enregistré dans le dépôt : les autres appareils et navigateurs ne sont pas concernés. Un bandeau orange au-dessus des onglets signale le forçage et permet de l'arrêter sans code ; les applications masquées sont repérées par la mention « masquée »." },
   { n:"1.11.0", d:"21 septembre 2026", c:"Faille corrigée : « Code oublié » permettait de définir un nouveau code sans preuve sur un appareil sans jeton. Il exige désormais un jeton GitHub que GitHub confirme, en direct, comme autorisé à écrire dans le dépôt du catalogue — le jeton déjà enregistré sur l'appareil n'est plus accepté. Second trou fermé : un appareil qui n'a pas pu lire le dépôt (hors connexion) ne propose plus de créer un code, et garde les réglages fermés." },
   { n:"1.10.0", d:"21 septembre 2026", c:"Le code des réglages est désormais commun à tous les appareils : il est rangé dans apps.json (sous forme d'empreinte) et relu à chaque démarrage. Un code défini sur un appareil est aussitôt demandé sur tous les autres, sans avoir à le recréer ; le changer ou l'effacer sur l'un le change partout. Un code créé avec la version précédente est partagé automatiquement au premier lancement de l'appareil où il a été défini." },
@@ -1216,6 +1247,38 @@ function basculerVisi(depot, cle, valeur){
 }
 
 /* ================================================================
+   6 ter. LECTEUR : ouvrir une application dans cette fenêtre
+   Toutes les apps sont sur hammerinhank.github.io, comme celle-ci : elles
+   s'affichent dans un cadre sans quitter Mes Apps.
+   ================================================================ */
+let lecteurApp = null;
+
+function ouvrirApp(a){
+  if (!a) return;
+  lecteurApp = a;
+  $("#lecteurTitre").textContent = a.nom;
+  $("#lecteurCharge").style.display = "grid";
+  const cadre = $("#lecteurCadre");
+  cadre.onload = () => { if (lecteurApp) $("#lecteurCharge").style.display = "none"; };
+  cadre.src = urlApp(a);
+  $("#lecteur").classList.add("ouvert");
+  document.body.style.overflow = "hidden";
+  log("▶︎ " + a.nom + " ouverte dans Mes Apps.");
+}
+
+function fermerLecteur(){
+  $("#lecteur").classList.remove("ouvert");
+  lecteurApp = null;
+  // Vider le cadre arrête vraiment l'app : GPS, écran maintenu allumé, minuteurs…
+  $("#lecteurCadre").src = "about:blank";
+  if (!$("#fiche").classList.contains("ouvert")) document.body.style.overflow = "";
+}
+
+function ouvrirDansNavigateur(){
+  if (lecteurApp) window.open(urlApp(lecteurApp), "_blank", "noopener");
+}
+
+/* ================================================================
    7. MODALE
    ================================================================ */
 function modale(titre, html){
@@ -1746,6 +1809,8 @@ document.addEventListener("click", ev => {
   if (t.closest("#modAnnuler")){ fermerModale(); return; }
   if (t.closest("#btnChangerCode")){ ouvrirPave("creer1", true); return; }
 
+  if (t.closest("#btnLecteurRetour")){ fermerLecteur(); return; }
+  if (t.closest("#btnLecteurExterne")){ ouvrirDansNavigateur(); return; }
   if (t.closest("#btnFinForcage")){ definirForcage(false); toast("Forçage arrêté"); return; }
 
   // onglets
@@ -1757,7 +1822,7 @@ document.addEventListener("click", ev => {
   if (ligne){
     if (t.classList.contains("pilule")){
       const a = apps.find(x => x.depot === ligne.dataset.depot);
-      if (a) window.open(urlApp(a), "_blank", "noopener");
+      if (a) ouvrirApp(a);
       return;
     }
     ouvrirFiche(ligne.dataset.depot);
@@ -1765,10 +1830,10 @@ document.addEventListener("click", ev => {
   }
 
   if (t.closest("[data-ouvrir]") && appCourante){
-    window.open(urlApp(appCourante), "_blank", "noopener"); return;
+    ouvrirApp(appCourante); return;
   }
   if (t.closest("#btnOuvrirApp") && appCourante){
-    window.open(urlApp(appCourante), "_blank", "noopener"); return;
+    ouvrirApp(appCourante); return;
   }
   if (t.closest("#btnFermerFiche")){ fermerFiche(); return; }
   if (t.closest("#btnAjoutCapture")){ choisirCaptures(); return; }
@@ -1872,6 +1937,7 @@ document.addEventListener("keydown", e => {
 
   if (e.key === "Escape"){
     if (modaleOuverte) fermerModale();
+    else if ($("#lecteur").classList.contains("ouvert")) fermerLecteur();
     else if ($("#fiche").classList.contains("ouvert")) fermerFiche();
   }
 });
