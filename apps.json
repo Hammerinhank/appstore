@@ -1,6 +1,6 @@
 {
   "version": "1.7.0",
-  "maj": "2026-09-21T07:05:08.180Z",
+  "maj": "2026-09-21T07:08:25.759Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -248,7 +248,7 @@
       ],
       "captures": [],
       "maj": "2026-08-12T15:32:43Z",
-      "cache": false,
+      "cache": true,
       "pasAujourdhui": false,
       "particuliere": false
     },
@@ -318,7 +318,7 @@
       ],
       "captures": [],
       "maj": "2026-09-14T21:47:34Z",
-      "cache": false,
+      "cache": true,
       "pasAujourdhui": true,
       "particuliere": true
     },
@@ -518,7 +518,7 @@
       ],
       "captures": [],
       "maj": "2026-09-20T15:24:38Z",
-      "cache": false,
+      "cache": true,
       "pasAujourdhui": true,
       "particuliere": true
     },
