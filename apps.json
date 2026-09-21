@@ -1,6 +1,6 @@
 {
   "version": "1.7.0",
-  "maj": "2026-09-21T07:00:32.523Z",
+  "maj": "2026-09-21T07:04:04.081Z",
   "apps": [
     {
       "depot": "Tourisme",
@@ -444,7 +444,9 @@
         "#0f6b8f",
         "#7fd8f5"
       ],
-      "captures": [],
+      "captures": [
+        "screens/vignettes/1-1789974241530.jpg"
+      ],
       "maj": "2026-09-11T19:09:45Z",
       "cache": false,
       "pasAujourdhui": false,
