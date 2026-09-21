@@ -195,6 +195,34 @@ body.dans-safari .conseil{display:block}
 body.dans-safari .tabs{padding-bottom:calc(var(--bas) + 10px)}
 body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 
+/* ---------- Clavier à code des réglages ---------- */
+.pave{position:fixed;inset:0;z-index:55;display:none;flex-direction:column;align-items:center;
+      justify-content:space-between;background:var(--fond);
+      padding:calc(var(--haut) + 44px) 24px calc(var(--bas) + 22px)}
+.pave.ouvert{display:flex;animation:fondu .18s}
+@keyframes fondu{from{opacity:0}to{opacity:1}}
+.pave-haut{text-align:center;max-width:300px}
+.pave-ico{font-size:30px;margin-bottom:10px}
+.pave-titre{font-size:20px;font-weight:600;letter-spacing:-.3px}
+.pave-sous{font-size:14px;color:var(--texte2);margin-top:6px;line-height:1.4;min-height:20px}
+.points{display:flex;gap:20px;justify-content:center;margin:26px 0 12px}
+.points i{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--texte);display:block;transition:background .1s}
+.points i.plein{background:var(--texte)}
+.points.secoue{animation:secoue .42s}
+@keyframes secoue{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-11px)}40%,80%{transform:translateX(11px)}}
+.pave-msg{font-size:14px;color:#ff3b30;min-height:20px}
+.touches{display:grid;grid-template-columns:repeat(3,78px);gap:16px 26px}
+.touches button{width:78px;height:78px;border-radius:50%;background:var(--carte);box-shadow:var(--ombre);
+                font-size:32px;font-weight:300;display:flex;flex-direction:column;align-items:center;
+                justify-content:center;line-height:1;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.touches button small{font-size:9.5px;font-weight:600;letter-spacing:1.6px;color:var(--texte2);margin-top:3px;height:11px}
+.touches button:active{background:var(--pilule)}
+.touches .vide{visibility:hidden}
+.touches .del{background:none;box-shadow:none;font-size:26px;font-weight:400}
+.pave-bas{display:flex;justify-content:space-between;width:100%;max-width:286px;margin-top:10px}
+.pave-bas button{color:var(--bleu);font-size:16px;padding:8px 4px}
+@media (max-height:640px){.touches button{width:66px;height:66px;font-size:28px}.touches{grid-template-columns:repeat(3,66px);gap:12px 24px}}
+
 /* ---------- Barre d'onglets ---------- */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
       background:var(--barre);backdrop-filter:saturate(180%) blur(20px);
@@ -394,6 +422,11 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
       <button class="gros-bouton sec" id="btnJetons">Chercher un jeton sur cet appareil</button>
       <div class="souslib">Retrouve un jeton GitHub déjà enregistré par vos autres applications, pour éviter de le retaper.</div>
 
+      <div class="grptitre">Code des réglages</div>
+      <button class="gros-bouton sec" id="btnChangerCode">Changer le code</button>
+      <div class="souslib">Demandé à chaque ouverture des réglages, sur ce navigateur uniquement.
+        C'est une protection contre les fausses manœuvres, pas un coffre-fort.</div>
+
       <div class="grptitre">Remise à zéro</div>
       <button class="gros-bouton dan" id="btnReinit">Effacer le catalogue de ce navigateur</button>
       <div class="souslib">Revient à la liste d'origine inscrite dans la page.
@@ -432,6 +465,35 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
   <div id="ficheCorps"></div>
 </div>
 
+<!-- ============ CLAVIER À CODE DES RÉGLAGES ============ -->
+<div class="pave" id="pave" role="dialog" aria-modal="true" aria-labelledby="paveTitre">
+  <div class="pave-haut">
+    <div class="pave-ico">🔒</div>
+    <div class="pave-titre" id="paveTitre">Code des réglages</div>
+    <div class="pave-sous" id="paveSous"></div>
+    <div class="points" id="pavePoints"><i></i><i></i><i></i><i></i></div>
+    <div class="pave-msg" id="paveMsg" aria-live="polite"></div>
+  </div>
+  <div class="touches">
+    <button data-touche="1">1<small></small></button>
+    <button data-touche="2">2<small>ABC</small></button>
+    <button data-touche="3">3<small>DEF</small></button>
+    <button data-touche="4">4<small>GHI</small></button>
+    <button data-touche="5">5<small>JKL</small></button>
+    <button data-touche="6">6<small>MNO</small></button>
+    <button data-touche="7">7<small>PQRS</small></button>
+    <button data-touche="8">8<small>TUV</small></button>
+    <button data-touche="9">9<small>WXYZ</small></button>
+    <button class="vide" tabindex="-1" aria-hidden="true"></button>
+    <button data-touche="0">0<small></small></button>
+    <button class="del" data-touche="del" aria-label="Effacer le dernier chiffre">⌫</button>
+  </div>
+  <div class="pave-bas">
+    <button id="paveOublie">Code oublié ?</button>
+    <button id="paveAnnuler">Annuler</button>
+  </div>
+</div>
+
 <!-- ============ MODALE GÉNÉRIQUE ============ -->
 <div class="modale" id="modale">
   <div class="carte">
@@ -449,9 +511,11 @@ body.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 24px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.8.0";
+const VERSION = "1.9.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.9.0", d:"21 septembre 2026", c:"Les réglages sont protégés par un code à 4 chiffres, saisi sur un clavier façon écran de verrouillage d'iPhone (ou au clavier de l'ordinateur). À la première ouverture, on choisit le code et on le confirme ; il est ensuite demandé à chaque entrée dans l'onglet Réglages. Après 5 erreurs, 30 secondes d'attente. « Code oublié ? » l'efface contre le jeton GitHub enregistré sur ce navigateur. Bouton « Changer le code » dans les réglages. Code propre à chaque navigateur, conservé sous forme d'empreinte et jamais en clair." },
+  { n:"1.8.1", d:"21 septembre 2026", c:"Les deux interdictions sur les captures (ajout et suppression) sont désormais cochées par défaut. Elles s'appliquent une fois à chaque navigateur, y compris ceux déjà réglés ; on peut ensuite les décocher, et ce choix est conservé." },
   { n:"1.8.0", d:"21 septembre 2026", c:"Nouvelle rubrique « Captures d'écran » dans les réglages, avec deux cases indépendantes : interdire l'ajout de captures (le cadre « ＋ Ajouter » disparaît des fiches) et interdire leur suppression (les croix disparaissent). Réglage propre à chaque navigateur, pris en compte immédiatement, sans rien modifier dans le dépôt." },
   { n:"1.7.0", d:"20 septembre 2026", c:"Correction des emojis d'icônes, qui restaient minuscules quelle que soit la taille de la pastille : leur taille était exprimée en pourcentage du texte hérité et non du côté de l'icône. Ils occupent désormais 55 % de la pastille partout — listes, mises en avant, fiche et réglages de visibilité." },
   { n:"1.6.0", d:"20 septembre 2026", c:"Correction du bouton OUVRIR de la fiche, qui ne réagissait pas sur iPhone : c'était un simple span, dont Safari ne propage pas le clic. Il devient un vrai bouton. Le second bouton OUVRIR, celui de la barre du haut, ne se montre plus que lorsque la fiche est défilée et que le premier n'est plus visible, comme dans l'App Store — les deux ne sont donc plus affichés en même temps." },
@@ -616,7 +680,7 @@ const CLE_CFG = "appstore_cfg";
 const CLE_CACHE = "appstore_catalogue";
 
 let cfg  = { user:PROPRIO_DEFAUT, depot:"appstore", branche:"main", token:"",
-             bloqueAjout:false, bloqueSuppr:false };
+             bloqueAjout:true, bloqueSuppr:true };
 let apps = [];
 let appCourante = null;
 
@@ -718,7 +782,16 @@ function htmlIcone(a, classe){
    4. CHARGEMENT DU CATALOGUE
    ================================================================ */
 function chargerCfg(){
-  try{ const o = JSON.parse(localStorage.getItem(CLE_CFG)||"{}"); Object.assign(cfg, o); }catch(e){}
+  try{
+    const o = JSON.parse(localStorage.getItem(CLE_CFG)||"{}");
+    Object.assign(cfg, o);
+    // v1.8.1 : les deux interdictions deviennent cochées par défaut. Appliqué une
+    // seule fois par navigateur ; un décochage ultérieur est ensuite respecté.
+    if (!o.defautsCaptures){
+      cfg.bloqueAjout = true; cfg.bloqueSuppr = true; cfg.defautsCaptures = 1;
+      localStorage.setItem(CLE_CFG, JSON.stringify(cfg));
+    }
+  }catch(e){}
   $("#cfgUser").value = cfg.user; $("#cfgDepot").value = cfg.depot;
   $("#cfgBranche").value = cfg.branche; $("#cfgToken").value = cfg.token;
   $("#prmAjout").checked = !!cfg.bloqueAjout;
@@ -1367,18 +1440,182 @@ function chercherJetons(){
 }
 
 /* ================================================================
+   10 bis. CODE DES RÉGLAGES
+   Code à 4 chiffres propre à ce navigateur, conservé sous forme
+   d'empreinte SHA-256, jamais en clair.
+   ================================================================ */
+const CLE_CODE = "appstore_code";
+const pav = { mode:null, saisie:"", premier:"", msg:"", changement:false,
+              resoudre:null, echecs:0, bloqueJusqua:0 };
+
+async function empreinte(code){
+  const texte = "appstore:" + code;
+  if (!(window.crypto && crypto.subtle)){          // page ouverte hors https : repli simple
+    let h = 2166136261;
+    for (let i=0;i<texte.length;i++){ h ^= texte.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return "fnv-" + (h >>> 0).toString(16);
+  }
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texte));
+  return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,"0")).join("");
+}
+
+/* mode : "saisir" (vérifier), "creer1" puis "creer2" (choisir et confirmer) */
+function ouvrirPave(mode, changement){
+  return new Promise(resoudre => {
+    Object.assign(pav, { mode:mode, saisie:"", premier:"", msg:"",
+                         changement:!!changement, resoudre:resoudre });
+    majPave();
+    $("#pave").classList.add("ouvert");
+  });
+}
+function fermerPave(ok){
+  $("#pave").classList.remove("ouvert");
+  const f = pav.resoudre; pav.resoudre = null;
+  if (f) f(ok);
+}
+
+function majPave(){
+  const T = {
+    saisir:["Code des réglages", "Tapez votre code à 4 chiffres"],
+    creer1:[pav.changement ? "Nouveau code" : "Choisissez un code",
+            pav.changement ? "Tapez le nouveau code à 4 chiffres"
+                           : "Il vous sera demandé à chaque ouverture des réglages"],
+    creer2:["Confirmez le code", "Tapez-le une seconde fois"]
+  }[pav.mode] || ["",""];
+  $("#paveTitre").textContent = T[0];
+  $("#paveSous").textContent = T[1];
+  $$("#pavePoints i").forEach((p,i) => p.classList.toggle("plein", i < pav.saisie.length));
+  $("#paveMsg").textContent = pav.msg;
+  $("#paveOublie").style.visibility = pav.mode === "saisir" ? "visible" : "hidden";
+}
+
+function secouer(){
+  const p = $("#pavePoints");
+  p.classList.remove("secoue"); void p.offsetWidth; p.classList.add("secoue");
+  if (navigator.vibrate) navigator.vibrate(180);
+}
+
+async function touchePave(ch){
+  if (Date.now() < pav.bloqueJusqua) return;
+  if (ch === "del"){ pav.saisie = pav.saisie.slice(0,-1); majPave(); return; }
+  if (pav.saisie.length >= 4) return;
+  if (!pav.saisie.length) pav.msg = "";
+  pav.saisie += ch;
+  majPave();
+  if (pav.saisie.length < 4) return;
+
+  await new Promise(r => setTimeout(r, 130));   // laisse voir le 4e point se remplir
+
+  if (pav.mode === "saisir"){
+    if ((await empreinte(pav.saisie)) === localStorage.getItem(CLE_CODE)){
+      pav.echecs = 0;
+      fermerPave(true);
+      return;
+    }
+    pav.echecs++;
+    pav.saisie = "";
+    secouer();
+    if (pav.echecs >= 5){
+      pav.bloqueJusqua = Date.now() + 30000;
+      const minuteur = setInterval(() => {
+        const reste = Math.ceil((pav.bloqueJusqua - Date.now()) / 1000);
+        if (reste <= 0){ clearInterval(minuteur); pav.echecs = 0; pav.msg = ""; }
+        else pav.msg = "Trop d'essais. Réessayez dans " + reste + " s";
+        majPave();
+      }, 250);
+    }else{
+      pav.msg = "Code incorrect";
+    }
+    majPave();
+    return;
+  }
+
+  if (pav.mode === "creer1"){
+    pav.premier = pav.saisie; pav.saisie = ""; pav.mode = "creer2";
+    majPave();
+    return;
+  }
+
+  if (pav.mode === "creer2"){
+    if (pav.saisie === pav.premier){
+      localStorage.setItem(CLE_CODE, await empreinte(pav.saisie));
+      toast(pav.changement ? "Nouveau code enregistré" : "Code enregistré");
+      fermerPave(true);
+    }else{
+      secouer();
+      Object.assign(pav, { mode:"creer1", saisie:"", premier:"",
+                           msg:"Les deux saisies diffèrent. Recommencez." });
+      majPave();
+    }
+  }
+}
+
+/* Code oublié : effacé contre le jeton GitHub de ce navigateur, puis
+   le clavier enchaîne directement sur le choix d'un nouveau code. */
+function codeOublie(){
+  if (!cfg.token){
+    demander("Code oublié",
+      "Aucun jeton GitHub n'est enregistré sur ce navigateur : le code peut être effacé sans autre vérification. "
+      + "Vous en choisirez aussitôt un nouveau.", "Effacer le code", true).then(ok => {
+        if (ok) recommencerCode();
+      });
+    return;
+  }
+  modale("Code oublié",
+      '<p class="q">Pour effacer le code, collez ci-dessous le jeton GitHub enregistré dans les réglages de ce navigateur.</p>'
+    + '<div class="grp" style="margin:0 0 16px"><div class="champ">'
+    +   '<input id="razJeton" type="password" placeholder="ghp_… ou github_pat_…" autocomplete="off" style="width:100%">'
+    + '</div></div>'
+    + '<div class="actionsmod">'
+    +   '<button class="bt-pri dan" id="btnRaz">Effacer le code</button>'
+    +   '<button class="bt-sec" id="modAnnuler">Annuler</button>'
+    + '</div>');
+}
+function recommencerCode(){
+  localStorage.removeItem(CLE_CODE);
+  Object.assign(pav, { mode:"creer1", saisie:"", premier:"", echecs:0, bloqueJusqua:0,
+                       changement:false, msg:"Ancien code effacé. Choisissez-en un nouveau." });
+  majPave();
+}
+
+/* Changement d'onglet : l'entrée dans Réglages passe par le clavier */
+async function allerOnglet(id){
+  const courant = ($(".page.actif") || {}).id;
+  if (id === "p-set" && courant !== "p-set"){
+    const ok = await ouvrirPave(localStorage.getItem(CLE_CODE) ? "saisir" : "creer1");
+    if (!ok) return;
+  }
+  $$(".tab").forEach(x => x.classList.toggle("on", x.dataset.page === id));
+  $$(".page").forEach(p => p.classList.toggle("actif", p.id === id));
+}
+
+/* ================================================================
    11. ÉVÉNEMENTS
    ================================================================ */
 document.addEventListener("click", ev => {
   const t = ev.target;
 
-  // onglets
-  const tab = t.closest(".tab");
-  if (tab){
-    $$(".tab").forEach(x => x.classList.toggle("on", x === tab));
-    $$(".page").forEach(p => p.classList.toggle("actif", p.id === tab.dataset.page));
+  // clavier à code
+  const touche = t.closest("[data-touche]");
+  if (touche){ touchePave(touche.dataset.touche); return; }
+  if (t.closest("#paveAnnuler")){ fermerPave(false); return; }
+  if (t.closest("#paveOublie")){ codeOublie(); return; }
+  if (t.closest("#btnRaz")){
+    const saisi = ($("#razJeton") || {}).value || "";
+    if (saisi.trim() && saisi.trim() === cfg.token){
+      fermerModale();
+      recommencerCode();
+    }else{
+      toast("Ce n'est pas le jeton enregistré sur ce navigateur");
+    }
     return;
   }
+  if (t.closest("#modAnnuler")){ fermerModale(); return; }
+  if (t.closest("#btnChangerCode")){ ouvrirPave("creer1", true); return; }
+
+  // onglets
+  const tab = t.closest(".tab");
+  if (tab){ allerOnglet(tab.dataset.page); return; }
 
   // ouvrir une fiche
   const ligne = t.closest(".ligne, .hero");
@@ -1482,8 +1719,17 @@ $("#fichierCaptures").addEventListener("change", e => {
   envoyerCaptures(fichiers);
 });
 document.addEventListener("keydown", e => {
+  const modaleOuverte = $("#modale").classList.contains("ouvert");
+
+  // Clavier à code : chiffres, retour arrière, Échap (sauf si une fenêtre est par-dessus)
+  if ($("#pave").classList.contains("ouvert") && !modaleOuverte){
+    if (/^[0-9]$/.test(e.key)){ e.preventDefault(); touchePave(e.key); return; }
+    if (e.key === "Backspace"){ e.preventDefault(); touchePave("del"); return; }
+    if (e.key === "Escape"){ fermerPave(false); return; }
+  }
+
   if (e.key === "Escape"){
-    if ($("#modale").classList.contains("ouvert")) fermerModale();
+    if (modaleOuverte) fermerModale();
     else if ($("#fiche").classList.contains("ouvert")) fermerFiche();
   }
 });
