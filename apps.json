@@ -1,6 +1,6 @@
 {
   "version": "1.11.0",
-  "maj": "2026-09-21T07:54:06.513Z",
+  "maj": "2026-09-21T07:55:28.533Z",
   "codeReglages": "4a3df07d0ab30d77d2e4c3e04a59b626f8f56dc03dd9f17a54d66b469db358f3",
   "apps": [
     {
@@ -286,7 +286,7 @@
       ],
       "maj": "2026-09-20T10:11:36Z",
       "cache": false,
-      "pasAujourdhui": false,
+      "pasAujourdhui": true,
       "particuliere": false
     },
     {
@@ -356,7 +356,7 @@
       ],
       "maj": "2026-09-20T14:35:43Z",
       "cache": false,
-      "pasAujourdhui": false,
+      "pasAujourdhui": true,
       "particuliere": false
     },
     {
@@ -412,8 +412,8 @@
       ],
       "maj": "2026-09-12T12:07:38Z",
       "cache": false,
-      "pasAujourdhui": false,
-      "particuliere": false
+      "pasAujourdhui": true,
+      "particuliere": true
     },
     {
       "depot": "Audio",
