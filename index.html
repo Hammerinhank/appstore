@@ -235,6 +235,7 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
 .forcebar button{background:rgba(255,255,255,.25);color:#fff;font-weight:700;font-size:13px;
                  padding:6px 12px;border-radius:100px;flex:none}
 .masquee{color:#ff9500;font-weight:600}
+.releve{font-size:13px;color:var(--texte2);padding:0 20px 9px;margin-top:-4px}
 
 /* ---------- Lecteur : application ouverte dans cette fenêtre ---------- */
 .lecteur{position:fixed;inset:0;z-index:45;background:var(--fond);display:none;flex-direction:column}
@@ -371,6 +372,7 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
       <div class="heros" id="heros"></div>
       <div class="sect">
         <h2>Récemment mises à jour</h2>
+        <div class="releve" id="releveInfo" hidden></div>
         <div class="liste" id="listeRecentes"></div>
       </div>
     </section>
@@ -415,6 +417,9 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
       <button class="gros-bouton sec" id="btnScan">Chercher de nouvelles applications</button>
       <div class="souslib">Parcourt vos dépôts GitHub et ajoute au catalogue celles qui n'y figurent pas encore.
         Ne modifie ni vos descriptifs ni vos captures.</div>
+      <button class="gros-bouton sec" id="btnDates">Relever les dates de mise à jour</button>
+      <div class="souslib">Recherche, pour chaque application, la date de la dernière modification de sa page.
+        Se fait déjà tout seul au démarrage ; ce bouton force un relevé immédiat.</div>
 
       <div class="grptitre">Visibilité des applications</div>
       <button class="gros-bouton sec" id="btnVisi">Gérer la liste<span class="chev" id="chevVisi">›</span></button>
@@ -573,9 +578,10 @@ body.forcage.dans-safari .page{padding-bottom:calc(80px + var(--bas) + 72px)}
 /* ================================================================
    1. VERSION ET HISTORIQUE
    ================================================================ */
-const VERSION = "1.13.0";
+const VERSION = "1.14.0";
 
 const HISTORIQUE_VERSIONS = [
+  { n:"1.14.0", d:"21 septembre 2026", c:"« Récemment mises à jour » repose désormais sur la date du dernier commit qui modifie réellement index.html de chaque application — les envois de données ne comptent plus. Ces dates sont relevées automatiquement en arrière-plan au démarrage (au plus toutes les 6 h avec jeton, 24 h sans), avec décompte de progression, et affichées sous le nom de chaque app ainsi que dans sa fiche. Bouton « Relever les dates maintenant » dans les réglages. La rotation d'Aujourd'hui change à minuit heure de Paris et ne montre jamais deux fois la même application." },
   { n:"1.13.0", d:"21 septembre 2026", c:"Les applications s'ouvrent désormais à l'intérieur de Mes Apps, en plein écran, au lieu de partir dans un navigateur externe. Une barre en haut permet de revenir (« ‹ Mes Apps ») ou, en secours, d'ouvrir l'application dans le navigateur (↗). Le retour arrête réellement l'application ouverte (GPS, écran maintenu allumé). Le GPS, l'appareil photo, le micro, le presse-papier et les capteurs de mouvement sont autorisés dans le cadre." },
   { n:"1.12.0", d:"21 septembre 2026", c:"Nouvelle case « Tout autoriser pendant cette session » dans les réglages, décochée par défaut : elle fait réapparaître les applications masquées et lève les interdictions d'ajout et de suppression de captures, jusqu'à la fermeture de l'onglet ou de l'application. Rien n'est enregistré dans le dépôt : les autres appareils et navigateurs ne sont pas concernés. Un bandeau orange au-dessus des onglets signale le forçage et permet de l'arrêter sans code ; les applications masquées sont repérées par la mention « masquée »." },
   { n:"1.11.0", d:"21 septembre 2026", c:"Faille corrigée : « Code oublié » permettait de définir un nouveau code sans preuve sur un appareil sans jeton. Il exige désormais un jeton GitHub que GitHub confirme, en direct, comme autorisé à écrire dans le dépôt du catalogue — le jeton déjà enregistré sur l'appareil n'est plus accepté. Second trou fermé : un appareil qui n'a pas pu lire le dépôt (hors connexion) ne propose plus de créer un code, et garde les réglages fermés." },
@@ -905,7 +911,7 @@ function normaliser(liste){
   return liste
     .filter(a => a && a.depot && !a.masque && a.nom)
     .map(a => Object.assign({ emoji:"📱", cat:"Utilitaires", st:"", d:"", c:["#5a5a66","#b0b0bd"],
-                              captures:[], maj:null,
+                              captures:[], maj:null, majHtml:null,
                               cache:false, pasAujourdhui:false, particuliere:false }, a));
 }
 
@@ -964,13 +970,104 @@ async function chargerCatalogue(silencieux){
 }
 
 /* ================================================================
+   4 bis. DATES DE MISE À JOUR
+   Date du dernier commit qui touche index.html : c'est la vraie date de
+   la dernière version d'une app, contrairement à pushed_at qui compte aussi
+   les envois de données. Relevé en arrière-plan, gardé en mémoire locale.
+   ================================================================ */
+const CLE_DATES = "appstore_dates";
+let releveEnCours = false;
+
+function datesEnCache(){
+  try{ return JSON.parse(localStorage.getItem(CLE_DATES) || "null") || { releve:null, dates:{} }; }
+  catch(e){ return { releve:null, dates:{} }; }
+}
+function appliquerDates(){
+  const c = datesEnCache();
+  apps.forEach(a => {
+    const d = c.dates[a.depot];
+    if (d && (!a.majHtml || d > a.majHtml)) a.majHtml = d;
+  });
+}
+function dateMaj(a){ return a.majHtml || a.maj || null; }
+
+async function releverDates(force){
+  if (releveEnCours || !apps.length) return;
+  const c = datesEnCache();
+  const age = c.releve ? Date.now() - new Date(c.releve).getTime() : Infinity;
+  const delai = (cfg.token ? 6 : 24) * 3600e3;       // sans jeton, GitHub limite à 60 appels/h
+  if (!force && age < delai) return;
+
+  releveEnCours = true;
+  const file = apps.slice(), total = file.length, info = $("#releveInfo");
+  let faits = 0, echecs = 0, quota = false;
+  info.hidden = false;
+  info.textContent = "Vérification des dates : 0 / " + total;
+  log("Relevé des dates de mise à jour (" + total + " applications)…");
+
+  const ouvrier = async () => {
+    while (file.length && !quota){
+      const a = file.shift();
+      try{
+        const h = { "Accept":"application/vnd.github+json" };
+        if (cfg.token) h["Authorization"] = "Bearer " + cfg.token;
+        const r = await fetch("https://api.github.com/repos/" + cfg.user + "/" + a.depot
+                              + "/commits?path=index.html&per_page=1", { headers:h });
+        if ((r.status === 403 || r.status === 429) && r.headers.get("x-ratelimit-remaining") === "0"){
+          quota = true; break;
+        }
+        if (r.ok){
+          const l = await r.json();
+          const d = l[0] && l[0].commit && (l[0].commit.committer || l[0].commit.author || {}).date;
+          if (d) c.dates[a.depot] = d;
+        }else echecs++;
+      }catch(e){ echecs++; }
+      faits++;
+      info.textContent = "Vérification des dates : " + faits + " / " + total + " · reste " + (total - faits);
+    }
+  };
+  await Promise.all([ouvrier(), ouvrier(), ouvrier(), ouvrier()]);   // 4 à la fois
+
+  if (!quota) c.releve = new Date().toISOString();
+  try{ localStorage.setItem(CLE_DATES, JSON.stringify(c)); }catch(e){}
+  releveEnCours = false;
+  info.hidden = true;
+  log(quota ? "⚠️ Quota GitHub atteint après " + faits + " / " + total + " : relevé à reprendre plus tard."
+            : "✅ Dates relevées : " + (faits - echecs) + " / " + total
+              + (echecs ? " (" + echecs + " sans réponse)" : "") + ".");
+  if (force) toast(quota ? "Quota GitHub atteint, réessayez plus tard" : "Dates de mise à jour relevées");
+  rendre();
+}
+
+/* « Aujourd'hui », « Hier », « Il y a 5 jours », puis la date */
+function dateRelative(iso){
+  if (!iso) return "";
+  const jours = jourParis() - jourParis(new Date(iso));
+  if (jours <= 0) return "Mise à jour aujourd'hui";
+  if (jours === 1) return "Mise à jour hier";
+  if (jours < 30) return "Mise à jour il y a " + jours + " jours";
+  return "Mise à jour le " + new Date(iso).toLocaleDateString("fr-FR",
+           { day:"numeric", month:"long", year:"numeric", timeZone:"Europe/Paris" }).replace(/^1 /, "1er ");
+}
+
+/* Numéro du jour à Paris : la rotation d'Aujourd'hui change à minuit heure
+   de Paris, et non à minuit UTC (1 h ou 2 h du matin). */
+function jourParis(date){
+  const t = new Intl.DateTimeFormat("en-CA", { timeZone:"Europe/Paris",
+              year:"numeric", month:"2-digit", day:"2-digit" }).format(date || new Date());
+  const [y, m, d] = t.split("-").map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 864e5);
+}
+
+/* ================================================================
    5. AFFICHAGE
    ================================================================ */
-function ligneApp(a){
+function ligneApp(a, sousTitre){
   const mention = (forcage && a.cache) ? '<span class="masquee">masquée · </span>' : '';
   return '<button class="ligne" data-depot="'+esc(a.depot)+'">'
     + htmlIcone(a,"ico")
-    + '<div class="txt"><div class="nom">'+esc(a.nom)+'</div><div class="st">'+mention+esc(a.st)+'</div></div>'
+    + '<div class="txt"><div class="nom">'+esc(a.nom)+'</div><div class="st">'+mention
+    + esc(sousTitre || a.st)+'</div></div>'
     + '<span class="pilule">OUVRIR</span></button>';
 }
 
@@ -979,18 +1076,24 @@ const PARTICULIERES = "Applications particulières";
 function visibles(){ return apps.filter(a => forcage || !a.cache); }
 
 function rendre(){
+  appliquerDates();
   const vis = visibles();
 
   // --- Aujourd'hui : date, mises en avant, récentes
   const d = new Date();
   $("#dateJour").textContent = d.toLocaleDateString("fr-FR",
-      { weekday:"long", day:"numeric", month:"long" });
+      { weekday:"long", day:"numeric", month:"long", timeZone:"Europe/Paris" });
 
+  // Rotation quotidienne : change à minuit heure de Paris. La seconde carte est
+  // prise à mi-distance dans la liste, donc toujours différente de la première.
   const pourAujourdhui = vis.filter(a => !a.pasAujourdhui);
-  const rang = Math.floor(d.getTime()/864e5);
+  const n = pourAujourdhui.length;
   const vedettes = [];
-  for (let i=0;i<2 && pourAujourdhui.length;i++)
-    vedettes.push(pourAujourdhui[(rang + i*7) % pourAujourdhui.length]);
+  if (n){
+    const i1 = jourParis() % n;
+    vedettes.push(pourAujourdhui[i1]);
+    if (n > 1) vedettes.push(pourAujourdhui[(i1 + Math.floor(n / 2)) % n]);
+  }
 
   $("#heros").innerHTML = vedettes.map(a =>
       '<button class="hero" data-depot="'+esc(a.depot)+'">'
@@ -1004,9 +1107,11 @@ function rendre(){
     +   '<span class="pilule">OUVRIR</span></div></button>').join("")
     || '<div class="vide">Aucune application à mettre en avant. Vérifiez les réglages de visibilité.</div>';
 
-  const recentes = pourAujourdhui.slice().sort((x,y) =>
-      String(y.maj||"").localeCompare(String(x.maj||""))).slice(0,6);
-  $("#listeRecentes").innerHTML = recentes.map(ligneApp).join("");
+  const recentes = pourAujourdhui.filter(a => dateMaj(a)).sort((x,y) =>
+      String(dateMaj(y)).localeCompare(String(dateMaj(x)))).slice(0,6);
+  $("#listeRecentes").innerHTML = recentes.length
+    ? recentes.map(a => ligneApp(a, dateRelative(dateMaj(a)))).join("")
+    : '<div class="vide" style="padding:28px 24px">Les dates de mise à jour n\'ont pas encore été relevées.</div>';
 
   // --- Apps : par catégorie, les particulières toujours en dernier
   const ordinaires = vis.filter(a => !a.particuliere);
@@ -1021,7 +1126,7 @@ function rendre(){
   $("#parCategorie").innerHTML = ordre.map(c =>
       '<div class="sect"><h2>'+esc(c)+'<span class="cnt">'+groupes[c].length+'</span></h2>'
     + '<div class="liste">'
-    + groupes[c].slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(ligneApp).join("")
+    + groupes[c].slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(a => ligneApp(a)).join("")
     + '</div></div>').join("");
 
   chercher();
@@ -1035,14 +1140,14 @@ function chercher(){
   if (!q){
     zone.innerHTML = '<div class="sect"><h2>Toutes les apps<span class="cnt">'+vis.length+'</span></h2>'
       + '<div class="liste">'
-      + vis.slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(ligneApp).join("")
+      + vis.slice().sort((x,y)=>x.nom.localeCompare(y.nom,"fr")).map(a => ligneApp(a)).join("")
       + '</div></div>';
     return;
   }
   const res = vis.filter(a =>
     (a.nom+" "+a.st+" "+a.d+" "+a.cat+" "+a.depot).toLowerCase().indexOf(q) >= 0);
   zone.innerHTML = res.length
-    ? '<div class="sect" style="margin-top:14px"><div class="liste">'+res.map(ligneApp).join("")+'</div></div>'
+    ? '<div class="sect" style="margin-top:14px"><div class="liste">'+res.map(a => ligneApp(a)).join("")+'</div></div>'
     : '<div class="vide">Aucune application ne correspond à « '+esc(q)+' ».</div>';
 }
 
@@ -1093,7 +1198,7 @@ function ouvrirFiche(depot){
     +   '<h4>Informations</h4><div class="infos">'
     +     infoLigne("Dépôt", a.depot)
     +     infoLigne("Adresse", '<a href="'+esc(urlApp(a))+'" target="_blank" rel="noopener">'+esc(urlApp(a))+'</a>', true)
-    +     infoLigne("Dernière mise à jour", a.maj ? new Date(a.maj).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}) : "inconnue")
+    +     infoLigne("Dernière mise à jour", dateMaj(a) ? new Date(dateMaj(a)).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric",timeZone:"Europe/Paris"}) : "inconnue")
     +     infoLigne("Développeur", cfg.user)
     +   '</div>'
     + '</div>';
@@ -1426,6 +1531,7 @@ async function envoyerCatalogue(auto){
                     codeReglages: codeReglages || null,
                     apps: apps.map(a => ({ depot:a.depot, nom:a.nom, emoji:a.emoji, cat:a.cat,
                                            st:a.st, d:a.d, c:a.c, captures:a.captures||[], maj:a.maj||null,
+                                           majHtml:a.majHtml||null,
                                            cache:!!a.cache, pasAujourdhui:!!a.pasAujourdhui,
                                            particuliere:!!a.particuliere })) };
   try{
@@ -1809,6 +1915,7 @@ document.addEventListener("click", ev => {
   if (t.closest("#modAnnuler")){ fermerModale(); return; }
   if (t.closest("#btnChangerCode")){ ouvrirPave("creer1", true); return; }
 
+  if (t.closest("#btnDates")){ releverDates(true); return; }
   if (t.closest("#btnLecteurRetour")){ fermerLecteur(); return; }
   if (t.closest("#btnLecteurExterne")){ ouvrirDansNavigateur(); return; }
   if (t.closest("#btnFinForcage")){ definirForcage(false); toast("Forçage arrêté"); return; }
@@ -1974,6 +2081,7 @@ function detecterMode(){
     log("Partage du code des réglages avec vos autres appareils…");
     await envoyerCatalogue(true);
   }
+  releverDates(false);        // en arrière-plan, sans bloquer l'affichage
 })();
 </script>
 </body>
